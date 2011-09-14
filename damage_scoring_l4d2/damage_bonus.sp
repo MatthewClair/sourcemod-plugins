@@ -131,7 +131,7 @@ public OnTakeDamagePost(victim, attacker, inflictor, Float:damage, damagetype)
 
 stock GetDamage()
 {
-	return 400;
+	return iTotalDamage[iRoundNumber-1];
 }
 
 stock IsPlayerIncap(client) return GetEntProp(client, Prop_Send, "m_isIncapacitated");
