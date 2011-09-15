@@ -147,7 +147,7 @@ stock GetSurvivorPermanentHealth(client) return GetEntProp(client, Prop_Send, "m
 stock CalculateSurvivalBonus()
 {
 	new iAliveSurvivors = GetAliveSurvivors();
-	return RoundToFloor(( MAX(800.0 - GetDamage(), 0.0) ) / iAliveSurvivors + 25 * iAliveSurvivors);
+	return RoundToFloor(( MAX(800.0 - GetDamage(), 0.0) ) / iAliveSurvivors + 25);
 }
 
 stock GetAliveSurvivors()
