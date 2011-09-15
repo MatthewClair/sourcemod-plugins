@@ -48,6 +48,8 @@ public OnPluginStart()
 	hPluginEnabled = CreateConVar("sm_dmgscore_enabled", "1", "Enable custom scoring based on distance, damage and survival bonus", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	bPluginEnabled = GetConVarBool(hPluginEnabled);
 	//HookConVarChange(hPluginEnabled, CvarEnabled_Change);
+	
+	
 }
 
 public OnPluginEnd()
@@ -138,7 +140,7 @@ stock IsPlayerIncap(client) return GetEntProp(client, Prop_Send, "m_isIncapacita
 
 stock GetSurvivorTempHealth(client)
 {
-        new temphp = RoundToCeil(GetEntPropFloat(client, Prop_Send, "m_iHealthBuffer") - ((GetGameTime() - GetEntPropFloat(client, Prop_Send, "m_healthBufferTime")) * GetConVarFloat(FindConVar("pain_pills_decay_rate")))) - 1;
+        new temphp = RoundToCeil(GetEntPropFloat(client, Prop_Send, "m_healthBuffer") - ((GetGameTime() - GetEntPropFloat(client, Prop_Send, "m_healthBufferTime")) * GetConVarFloat(FindConVar("pain_pills_decay_rate")))) - 1;
         return (temphp > 0 ? temphp : 0);
 }
 
