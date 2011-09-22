@@ -1,5 +1,6 @@
 #include <sourcemod.inc>
 #include <sdkhooks>
+#include <sdktools>
 
 #define MAX(%0,%1) (((%0) > (%1)) ? (%0) : (%1))
 
@@ -33,6 +34,7 @@ public OnPluginStart()
 	// Score Change Triggers
 	HookEvent("door_close", DoorClose_Event);
 	HookEvent("player_death", PlayerDeath_Event);
+	HookEvent("finale_vehicle_leaving", FinaleVehicleLeaving_Event, EventHookMode_PostNoCopy);
 
 	HookEvent("round_start", RoundStart_Event, EventHookMode_PostNoCopy);
 	HookEvent("round_end", RoundEnd_Event, EventHookMode_PostNoCopy);
@@ -48,8 +50,8 @@ public OnPluginStart()
 	hPluginEnabled = CreateConVar("sm_dmgscore_enabled", "1", "Enable custom scoring based on distance, damage and survival bonus", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	bPluginEnabled = GetConVarBool(hPluginEnabled);
 	//HookConVarChange(hPluginEnabled, CvarEnabled_Change);
-	
-	
+
+	RegConsoleCmd("sm_damage", Damage_Cmd, "Prints the damage taken by both teams");
 }
 
 public OnPluginEnd()
@@ -75,6 +77,18 @@ public OnClientPutInServer(client)
 	SDKHook(client, SDKHook_OnTakeDamagePost, OnTakeDamagePost);
 }
 
+public Action:Damage_Cmd(client, args)
+{
+	if (client)
+	{
+		PrintToChat(client, "Team 1 damage taken: %d\nTeam 2 damage taken: %d", iTotalDamage[0], iTotalDamage[1]);
+	}
+	else
+	{
+		PrintToServer("Team 1 damage taken: %d\nTeam 2 damage taken: %d", iTotalDamage[0], iTotalDamage[1]);
+	}
+}
+
 public RoundStart_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (!bInRound)
@@ -89,11 +103,14 @@ public RoundEnd_Event(Handle:event, const String:name[], bool:dontBroadcast)
 	if (bInRound)
 	{
 		bInRound = false;
-		PrintToChatAll("Fist round score should be here!");
+
+		PrintToChatAll("TODO!");
 	}
 	if (iRoundNumber == 2)
 	{
-		PrintToChatAll("Scores will go here!!");
+		new iAliveSurvivors = GetAliveSurvivors();
+
+		PrintToChatAll("TODO! ROUND 2!!");
 	}
 }
 
@@ -111,37 +128,56 @@ public PlayerDeath_Event(Handle:event, const String:name[], bool:dontBroadcast)
 		SetConVarInt(hSurvivalBonusCvar, CalculateSurvivalBonus());
 }
 
+public FinaleVehicleLeaving_Event(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	for (new i = 1; i < MaxClients; i++)
+	{
+		if (IsClientInGame(i) && IsSurvivor(i) && IsPlayerIncap(i))
+		{
+			ForcePlayerSuicide(i);
+		}
+	}
+	
+	SetConVarInt(hSurvivalBonusCvar, CalculateSurvivalBonus());
+}
+
 public OnTakeDamage(victim, attacker, inflictor, Float:damage, damagetype)
 {
-        iHealth[victim] = (GetClientTeam(victim) != 2 || IsPlayerIncap(victim)) ? 0 : (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim));
+	iHealth[victim] = (!IsSurvivor(victim) || (IsPlayerIncap(victim) && !IsPlayerHanging(victim))) ? 0 : (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim));
 }
 
 public OnTakeDamagePost(victim, attacker, inflictor, Float:damage, damagetype)
 {
-        if (iHealth[victim])
-        {
-                if (!IsPlayerAlive(victim) || IsPlayerIncap(victim))
-                {
-                        iTotalDamage[iRoundNumber-1] += iHealth[victim];
-                }
-                else
-                {
-                        iTotalDamage[iRoundNumber-1] +=  iHealth[victim] - (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim))
-                }
-        }
+	if (iHealth[victim])
+	{
+		if (!IsPlayerAlive(victim) || (IsPlayerIncap(victim) && !IsPlayerHanging(victim)))
+		{
+			iTotalDamage[iRoundNumber-1] += iHealth[victim];
+		}
+		else
+		{
+			if (IsPlayerHanging(victim))
+			{
+				iTotalDamage[iRoundNumber-1] += (iHealth[victim] - (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim)))/3;
+			}
+			else
+				iTotalDamage[iRoundNumber-1] += iHealth[victim] - (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim));
+		}
+	}
 }
 
-stock GetDamage()
+stock GetDamage(round=-1)
 {
-	return iTotalDamage[iRoundNumber-1];
+	return (round == -1) ? iTotalDamage[iRoundNumber-1] : iTotalDamage[round];
 }
 
-stock IsPlayerIncap(client) return GetEntProp(client, Prop_Send, "m_isIncapacitated");
+stock bool:IsPlayerIncap(client) return bool:GetEntProp(client, Prop_Send, "m_isIncapacitated");
+stock bool:IsPlayerHanging(client) return bool:GetEntProp(client, Prop_Send, "m_isHangingFromLedge");
 
 stock GetSurvivorTempHealth(client)
 {
-        new temphp = RoundToCeil(GetEntPropFloat(client, Prop_Send, "m_healthBuffer") - ((GetGameTime() - GetEntPropFloat(client, Prop_Send, "m_healthBufferTime")) * GetConVarFloat(FindConVar("pain_pills_decay_rate")))) - 1;
-        return (temphp > 0 ? temphp : 0);
+	new temphp = RoundToCeil(GetEntPropFloat(client, Prop_Send, "m_healthBuffer") - ((GetGameTime() - GetEntPropFloat(client, Prop_Send, "m_healthBufferTime")) * GetConVarFloat(FindConVar("pain_pills_decay_rate")))) - 1;
+	return (temphp > 0 ? temphp : 0);
 }
 
 stock GetSurvivorPermanentHealth(client) return GetEntProp(client, Prop_Send, "m_iHealth");
@@ -171,4 +207,3 @@ stock bool:IsSurvivor(client)
 {
 	return IsClientInGame(client) && GetClientTeam(client) == 2;
 }
-
