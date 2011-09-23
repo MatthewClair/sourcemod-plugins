@@ -23,6 +23,10 @@ new         iTieBreakBonusDefault;
 new Handle: hPluginEnabled;
 new bool:   bPluginEnabled;
 
+new Handle: hStaticBonusCvar;
+new Handle: hMaxDamageCvar;
+new Handle: hDamageMultiCvar;
+
 new         iHealth[MAXPLAYERS + 1];
 new         iTotalDamage[2];
 
@@ -50,6 +54,11 @@ public OnPluginStart()
 	hPluginEnabled = CreateConVar("sm_dmgscore_enabled", "1", "Enable custom scoring based on distance, damage and survival bonus", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	bPluginEnabled = GetConVarBool(hPluginEnabled);
 	//HookConVarChange(hPluginEnabled, CvarEnabled_Change);
+	
+	// Configuration Cvars
+	hStaticBonusCvar = CreateConVar("sm_static_bonus", "25.0", "Extra static bonus that is awarded per survivor for completing the map", FCVAR_PLUGIN, true, 0.0);
+	hMaxDamageCvar = CreateConVar("sm_max_damage", "800.0", "Max damage used for calculation (controls x in [x - damage])", FCVAR_PLUGIN);
+	hDamageMultiCvar = CreateConVar("sm_damage_multi", "1.0", "Multiplier to apply to damage before subtracting it from the max damage", FCVAR_PLUGIN, true, 0.0);
 
 	RegConsoleCmd("sm_damage", Damage_Cmd, "Prints the damage taken by both teams");
 }
@@ -108,8 +117,6 @@ public RoundEnd_Event(Handle:event, const String:name[], bool:dontBroadcast)
 	}
 	if (iRoundNumber == 2)
 	{
-		new iAliveSurvivors = GetAliveSurvivors();
-
 		PrintToChatAll("TODO! ROUND 2!!");
 	}
 }
@@ -185,7 +192,7 @@ stock GetSurvivorPermanentHealth(client) return GetEntProp(client, Prop_Send, "m
 stock CalculateSurvivalBonus()
 {
 	new iAliveSurvivors = GetAliveSurvivors();
-	return RoundToFloor(( MAX(800.0 - GetDamage(), 0.0) ) / iAliveSurvivors + 25);
+	return RoundToFloor(( MAX(GetConVarFloat(hMaxDamageCvar) - GetDamage() * GetConVarFloat(hDamageMultiCvar), 0.0) ) / iAliveSurvivors + GetConVarFloat(hStaticBonusCvar));
 }
 
 stock GetAliveSurvivors()
