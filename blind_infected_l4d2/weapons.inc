@@ -70,7 +70,7 @@ new const String:WeaponNames[WeaponId][] =
 	"weapon_none", "weapon_pistol", "weapon_smg", // 0
 	"weapon_pumpshotgun", "weapon_autoshotgun", "weapon_rifle", // 3
 	"weapon_hunting_rifle", "weapon_smg_silenced", "weapon_shotgun_chrome", // 6
-	"weapon_rifle_deset", "weapon_sniper_military", "weapon_shotgun_spas", // 9
+	"weapon_rifle_desert", "weapon_sniper_military", "weapon_shotgun_spas", // 9
 	"weapon_first_aid_kit", "weapon_molotov", "weapon_pipe_bomb", // 12
 	"weapon_pain_pills", "weapon_gascan", "weapon_propanetank",  // 15
 	"weapon_oxygentank", "weapon_melee", "weapon_chainsaw",  // 18
