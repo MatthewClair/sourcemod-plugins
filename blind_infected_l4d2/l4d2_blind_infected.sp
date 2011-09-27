@@ -8,7 +8,7 @@
 #define ENT_CHECK_INTERVAL 1.0
 #define TRACE_TOLERANCE 75.0
 
-pubic Plugin:myinfo =
+public Plugin:myinfo =
 {
 	name = "Blind Infected",
 	author = "CanadaRox, ProdigySim",
