@@ -14,47 +14,47 @@ enum EntInfo
 	bool:hasBeenSeen
 }
 
-new const iIdsToBlock[] =
+new const WeaponId:iIdsToBlock[] =
 {
-	_:WEPID_PISTOL,
-	_:WEPID_SMG,
-	_:WEPID_PUMPSHOTGUN,
-	_:WEPID_AUTOSHOTGUN,
-	_:WEPID_RIFLE,
-	_:WEPID_HUNTING_RIFLE,
-	_:WEPID_SMG_SILENCED,
-	_:WEPID_SHOTGUN_CHROME,
-	_:WEPID_RIFLE_DESERT,
-	_:WEPID_SNIPER_MILITARY,
-	_:WEPID_SHOTGUN_SPAS,
-	_:WEPID_FIRST_AID_KIT,
-	_:WEPID_MOLOTOV,
-	_:WEPID_PIPE_BOMB,
-	_:WEPID_PAIN_PILLS,
-	_:WEPID_GASCAN,
-	_:WEPID_PROPANE_TANK,
-	_:WEPID_OXYGEN_TANK,
-	_:WEPID_MELEE,
-	_:WEPID_CHAINSAW,
-	_:WEPID_GRENADE_LAUNCHER,
-	_:WEPID_AMMO_PACK,
-	_:WEPID_ADRENALINE,
-	_:WEPID_DEFIBRILLATOR,
-	_:WEPID_VOMITJAR,
-	_:WEPID_RIFLE_AK47,
-	_:WEPID_FIREWORKS_BOX,
-	_:WEPID_INCENDIARY_AMMO,
-	_:WEPID_FRAG_AMMO,
-	_:WEPID_PISTOL_MAGNUM,
-	_:WEPID_SMG_MP5,
-	_:WEPID_RIFLE_SG552
+	WEPID_PISTOL,
+	WEPID_SMG,
+	WEPID_PUMPSHOTGUN,
+	WEPID_AUTOSHOTGUN,
+	WEPID_RIFLE,
+	WEPID_HUNTING_RIFLE,
+	WEPID_SMG_SILENCED,
+	WEPID_SHOTGUN_CHROME,
+	WEPID_RIFLE_DESERT,
+	WEPID_SNIPER_MILITARY,
+	WEPID_SHOTGUN_SPAS,
+	WEPID_FIRST_AID_KIT,
+	WEPID_MOLOTOV,
+	WEPID_PIPE_BOMB,
+	WEPID_PAIN_PILLS,
+	WEPID_GASCAN,
+	WEPID_PROPANE_TANK,
+	WEPID_OXYGEN_TANK,
+	WEPID_MELEE,
+	WEPID_CHAINSAW,
+	WEPID_GRENADE_LAUNCHER,
+	WEPID_AMMO_PACK,
+	WEPID_ADRENALINE,
+	WEPID_DEFIBRILLATOR,
+	WEPID_VOMITJAR,
+	WEPID_RIFLE_AK47,
+	WEPID_FIREWORKS_BOX,
+	WEPID_INCENDIARY_AMMO,
+	WEPID_FRAG_AMMO,
+	WEPID_PISTOL_MAGNUM,
+	WEPID_SMG_MP5,
+	WEPID_RIFLE_SG552
 };
 
 new Handle:hBlockedEntities;
 
 public OnPluginStart()
 {
-	//L4D2Weapons_Init();
+	L4D2Weapons_Init();
 
 	HookEvent("round_start", RoundStart_Event, EventHookMode_PostNoCopy);
 
@@ -89,19 +89,18 @@ public RoundStart_Event(Handle:event, const String:name[], bool:dontBroadcast)
 
 public Action:RoundStartDelay_Timer(Handle:timer)
 {
-	decl String:sModelName[128], String:sTemp[128], bhTemp[EntInfo];
+	decl bhTemp[EntInfo];
+	decl WeaponId:weapon;
 	new psychonic = GetEntityCount();
 
 	for (new i = MaxClients; i < psychonic; i++)
 	{
-		if (IsValidEntity(i))
+		weapon = IdentifyWeapon(i);
+		if (weapon)
 		{
-			GetEntPropString(i, Prop_Data, "m_ModelName", sModelName, sizeof(sModelName));
-
 			for (new j; j < sizeof(iIdsToBlock); j++)
 			{
-				Format(sTemp, sizeof(sTemp), "models%s", WeaponModels[iIdsToBlock[j]]);
-				if (StrEqual(sTemp, sModelName, false))
+				if (weapon == iIdsToBlock[j])
 				{
 					SDKHook(i, SDKHook_SetTransmit, OnTransmit);
 					bhTemp[iEntity] = i;

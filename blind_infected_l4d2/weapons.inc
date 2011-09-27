@@ -232,7 +232,7 @@ stock WeaponId:IdentifyWeapon(const entity)
 
 	if(StrEqual(class, "weapon_spawn"))
 	{
-		return WeaponId:GetEntProp(iEntity,Prop_Send,"m_weaponID");
+		return WeaponId:GetEntProp(entity,Prop_Send,"m_weaponID");
 	}
 
 	new len = strlen(class);
