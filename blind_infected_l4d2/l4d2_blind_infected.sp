@@ -8,6 +8,15 @@
 #define ENT_CHECK_INTERVAL 1.0
 #define TRACE_TOLERANCE 75.0
 
+public Plugin:myinfo =
+{
+	name = "Blind Infected",
+	author = "CanadaRox, ProdigySim",
+	description = "Hides specified weapons from the infected team until they are (possibly) visible to one of the survivors to prevent SI scouting the map",
+	version = "1.0",
+	url = "https://github.com/CanadaRox/sourcemod-plugins/tree/master/blind_infected_l4d2"
+};
+
 enum EntInfo
 {
 	iEntity,
@@ -31,9 +40,6 @@ new const WeaponId:iIdsToBlock[] =
 	WEPID_MOLOTOV,
 	WEPID_PIPE_BOMB,
 	WEPID_PAIN_PILLS,
-	WEPID_GASCAN,
-	WEPID_PROPANE_TANK,
-	WEPID_OXYGEN_TANK,
 	WEPID_MELEE,
 	WEPID_CHAINSAW,
 	WEPID_GRENADE_LAUNCHER,
@@ -42,7 +48,6 @@ new const WeaponId:iIdsToBlock[] =
 	WEPID_DEFIBRILLATOR,
 	WEPID_VOMITJAR,
 	WEPID_RIFLE_AK47,
-	WEPID_FIREWORKS_BOX,
 	WEPID_INCENDIARY_AMMO,
 	WEPID_FRAG_AMMO,
 	WEPID_PISTOL_MAGNUM,

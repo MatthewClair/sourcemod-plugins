@@ -1,10 +1,16 @@
 #include <adt_trie>
+#include <sourcemod>
+#include <sdktools>
 
 #if defined __l4d2_weapons_inc__
 #endinput
 #endif
 #define __l4d2_weapons_inc__
 
+
+// Weapon ID enumerations.
+// These values are *NOT* arbitrary! 
+// They are used in game as the weaponid for weapon_spawn entities
 enum WeaponId
 {
 	WEPID_NONE,				// 0
@@ -65,12 +71,13 @@ enum WeaponId
 	WEPID_UPGRADE_ITEM		// 55
 };
 
+// Weapon names for each of the weapons, used in identification.
 new const String:WeaponNames[WeaponId][] =
 {
 	"weapon_none", "weapon_pistol", "weapon_smg", // 0
 	"weapon_pumpshotgun", "weapon_autoshotgun", "weapon_rifle", // 3
 	"weapon_hunting_rifle", "weapon_smg_silenced", "weapon_shotgun_chrome", // 6
-	"weapon_rifle_deset", "weapon_sniper_military", "weapon_shotgun_spas", // 9
+	"weapon_rifle_desert", "weapon_sniper_military", "weapon_shotgun_spas", // 9
 	"weapon_first_aid_kit", "weapon_molotov", "weapon_pipe_bomb", // 12
 	"weapon_pain_pills", "weapon_gascan", "weapon_propanetank",  // 15
 	"weapon_oxygentank", "weapon_melee", "weapon_chainsaw",  // 18
@@ -88,12 +95,14 @@ new const String:WeaponNames[WeaponId][] =
 	"ammo", "upgrade_item" // 54
 };
 
+// World Weapon models for each of the weapons. Useful for making new weapon spawns
+// Some models are left blank because no single model can be given, or none is known.
 new const String:WeaponModels[WeaponId][] =
 {
 	"",												
 	"/w_models/weapons/w_pistol_B.mdl",				
 	"/w_models/weapons/w_smg_uzi.mdl",				
-	"/w_models/weapons/w_shotgun.mdl",				// "/w_models/weapons/w_pumpshotgun.mdl"
+	"/w_models/weapons/w_shotgun.mdl",			
 	"/w_models/weapons/w_autoshot_m4super.mdl",		
 	"/w_models/weapons/w_rifle_m16a2.mdl",			
 	"/w_models/weapons/w_sniper_mini14.mdl",		
@@ -178,15 +187,29 @@ stock L4D2Weapons_Init()
 	}
 }
 
+/**
+ * Performs bounds checking to determine if a WeaponId is valid
+ * @remark Simple check to see if wepid has a garbage value
+ *
+ * @param wepid		WeaponId to check for validity
+ * @return True if wepid is valid, false otherwise.
+ */
 stock bool:IsValidWeaponId(WeaponId:wepid)
 {
 	return wepid >= WEPID_NONE && wepid < WeaponId;
 }
 
+/**
+ * Checks to see if a given weaponid has a known WeaponModel in this file's model array
+ * @remark Some weapons (like weapon_melee) have multiple valid models, and this will report false for them.
+ *
+ * @param wepid		WeaponId to check for a known weapon model for.
+ * @return True if a valid weapon model exists for wepid, false otherwise.
+ */
 stock bool:HasValidWeaponModel(WeaponId:wepid)
 {
 	// return IsValidWeaponId(wepid) && WeaponModels[wepid][0] == '\0';
-	return WeaponModels[wepid][0] == '\0';
+	return WeaponModels[wepid][0] != '\0';
 }
 
 /**
@@ -218,7 +241,14 @@ static InitWeaponNamesTrie()
 	}
 }
 
-stock WeaponId:IdentifyWeapon(const entity)
+/**
+ * Identifies a weapon spawn or weapon entity as a WeaponID
+ * @remark Should work on most weapon ents--even spawns, singles, held, etc.
+ *
+ * @param entity		Index of entity to identify
+ * @return WeaponID for the entity if it is a weapon, WEPID_NONE otherwise
+ */
+stock WeaponId:IdentifyWeapon(entity)
 {
 	if(!entity || !IsValidEntity(entity) || !IsValidEdict(entity))
 	{
@@ -236,7 +266,7 @@ stock WeaponId:IdentifyWeapon(const entity)
 	}
 
 	new len = strlen(class);
-	if(StrEqual(class[len-6], "_spawn"))
+	if(len-6 > 0 && StrEqual(class[len-6], "_spawn"))
 	{
 		class[len-6]='\0';
 		return WeaponNameToId(class);
@@ -247,14 +277,25 @@ stock WeaponId:IdentifyWeapon(const entity)
 
 // returns an entity of the new weapon spawn on success
 // -1 on failure or removal
+/**
+ * Attempts to convert a weapon spawn entity to a given weapon spawn
+ * @remark Truthfully, this will work on any entity with origin/rotation.
+ *		Also, requires the weapon to either have a Valid weapon model or have one provided
+ *
+ * @param entity		Index of entity to convert to weapon spawn
+ * @param wepid			WeaponId of the weapon to have the spawner hold
+ * @param count			Weapon count for the spawner (default 5)
+ * @param model			World model to use for the weapon spawn
+ * @return entity of the new weapon spawn, or -1 on errors.
+ */
 stock ConvertWeaponSpawn(entity, WeaponId:wepid, count=5, const String:model[] = "")
 {
-	if(!IsValidEntity(edict)) return -1;
+	if(!IsValidEntity(entity)) return -1;
 	if(!IsValidWeaponId(wepid)) return -1;
 	if(model[0] == '\0' && !HasValidWeaponModel(wepid)) return -1;
 	
 	
-	new Float:origins, angles;
+	new Float:origins[3], Float:angles[3];
 	GetEntPropVector(entity, Prop_Send, "m_vecOrigin", origins);
 	GetEntPropVector(entity, Prop_Send, "m_angRotation", angles);
 	
