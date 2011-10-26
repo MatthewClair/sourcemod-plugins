@@ -1,7 +1,7 @@
 #include <sourcemod>
 #include <sdkhooks>
 #include <sdktools>
-#include "weapons.inc"
+#include "../weapons.inc"
 
 #define SURVIVOR_TEAM 2
 #define INFECTED_TEAM 3

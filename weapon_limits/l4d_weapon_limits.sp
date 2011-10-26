@@ -3,13 +3,11 @@
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
-#include <adt_array>
-#include <adt_trie>
+#include "../weapons.inc"
 
 #define MAX_WEAPON_NAME_LENGTH 32
-#define MAX_WEAPONS 8
-#define GAMEDATA_FILE      "give_test"
-#define GAMEDATA_USE_AMMO  "CWeaponAmmoSpawn_Use"
+#define GAMEDATA_FILE          "l4d_weapon_limits"
+#define GAMEDATA_USE_AMMO      "CWeaponAmmoSpawn_Use"
 
 public Plugin:myinfo =
 {
@@ -20,35 +18,20 @@ public Plugin:myinfo =
 	url = "https://www.github.com/CanadaRox/sourcemod-plugins/tree/master/weapon_limits"
 }
 
-enum LE
+enum LimitArrayEntry
 {
-	LE_iLimit,
-	/*String:LE_sWeaponNames[MAX_WEAPONS][MAX_WEAPON_NAME_LENGTH]*/
-	String:LE_sWeaponName0[MAX_WEAPON_NAME_LENGTH],
-	String:LE_sWeaponName1[MAX_WEAPON_NAME_LENGTH],
-	String:LE_sWeaponName2[MAX_WEAPON_NAME_LENGTH],
-	String:LE_sWeaponName3[MAX_WEAPON_NAME_LENGTH],
-	String:LE_sWeaponName4[MAX_WEAPON_NAME_LENGTH],
-	String:LE_sWeaponName5[MAX_WEAPON_NAME_LENGTH],
-	String:LE_sWeaponName6[MAX_WEAPON_NAME_LENGTH],
-	String:LE_sWeaponName7[MAX_WEAPON_NAME_LENGTH]
-}
-
-enum TrieArrayEntry
-{
-	TAE_iLimit,
-	Handle:TAE_hTrie
+	LAE_iLimit,
+	LAE_WeaponArray[_:WeaponId/32+1]
 }
 
 new Handle:hSDKGiveDefaultAmmo;
-new Handle:hEntryList;
-new Handle:hTrieArray;
+new Handle:hLimitArray;
 new bIsLocked;
 new iAmmoPile;
 
 public OnPluginStart()
 {
-	hEntryList = CreateArray(_:LE);
+	hLimitArray = CreateArray(_:LimitArrayEntry);
 
 	/* Preparing SDK Call */
 	/* {{{ */
@@ -87,26 +70,6 @@ public OnClientDisconnect(client)
 	SDKUnhook(client, SDKHook_WeaponCanUse, WeaponCanUse);
 }
 
-public Action:WeaponCanUse(client, weapon)
-{
-	decl String:primary_name[64];
-	GetEdictClassname(weapon, primary_name, sizeof(primary_name));
-
-	decl arrayEntry[TrieArrayEntry], tmp;
-	new size = GetArraySize(hTrieArray);
-	for (new i = 0; i < size; ++i)
-	{
-		GetArrayArray(hTrieArray, i, arrayEntry[0]);
-		if (GetTrieValue(arrayEntry[TAE_hTrie], primary_name, tmp)
-			&& GetWeaponCount(arrayEntry[TAE_hTrie]) >= arrayEntry[TAE_iLimit])
-			{
-				GiveDefaultAmmo(client);
-				return Plugin_Handled;
-			}
-	}
-	return Plugin_Continue;
-}
-
 public RoundStart_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	CreateTimer(2.0, RoundStartDelay_Timer);
@@ -119,84 +82,32 @@ public Action:RoundStartDelay_Timer(Handle:timer)
 
 public Action:AddLimit_Cmd(args)
 {
-	if (bIsLocked || args < 2 || args > 9) return;
+	if (bIsLocked)
+	{
+		PrintToServer("Limits have been locked");
+		return Plugin_Handled;
+	}
+	else if (args < 2)
+	{
+		PrintToServer("Usage: l4d_wlimits_add <limit> <weapon1> <weapon2> ... <weaponN>");
+		return Plugin_Handled;
+	}
+
 	decl String:sTempBuff[MAX_WEAPON_NAME_LENGTH];
+	GetCmdArg(1, sTempBuff, sizeof(sTempBuff));
 
-	if (!GetCmdArg(1, sTempBuff, sizeof(sTempBuff))) return;
+	new newEntry[LimitArrayEntry];
+	decl WeaponId:wepid;
+	newEntry[LAE_iLimit] = StringToInt(sTempBuff);
 
-	decl newEntry[LE];
-	newEntry[LE_iLimit] = StringToInt(sTempBuff);
-
-	/*for (new i = 2; i < args; ++i)*/
-	/*{*/
-	GetCmdArg(2, sTempBuff, sizeof(sTempBuff));
-	strcopy(newEntry[LE_sWeaponName0], MAX_WEAPON_NAME_LENGTH, sTempBuff);
-	if (args >= 3)
+	for (new i = 2; i <= args; ++i)
 	{
-		GetCmdArg(3, sTempBuff, sizeof(sTempBuff));
-		strcopy(newEntry[LE_sWeaponName1], MAX_WEAPON_NAME_LENGTH, sTempBuff);
+		GetCmdArg(i, sTempBuff, sizeof(sTempBuff));
+		wepid = WeaponNameToId(sTempBuff);
+		newEntry[LAE_WeaponArray][_:wepid/32] |= (1 << (_:wepid % 32));
 	}
-	else
-	{
-		strcopy(newEntry[LE_sWeaponName1], MAX_WEAPON_NAME_LENGTH, "");
-	}
-	if (args >= 4)
-	{
-		GetCmdArg(4, sTempBuff, sizeof(sTempBuff));
-		strcopy(newEntry[LE_sWeaponName2], MAX_WEAPON_NAME_LENGTH, sTempBuff);
-	}
-	else
-	{
-		strcopy(newEntry[LE_sWeaponName2], MAX_WEAPON_NAME_LENGTH, "");
-	}
-	if (args >= 5)
-	{
-		GetCmdArg(5, sTempBuff, sizeof(sTempBuff));
-		strcopy(newEntry[LE_sWeaponName3], MAX_WEAPON_NAME_LENGTH, sTempBuff);
-	}
-	else
-	{
-		strcopy(newEntry[LE_sWeaponName3], MAX_WEAPON_NAME_LENGTH, "");
-	}
-	if (args >= 6)
-	{
-		GetCmdArg(6, sTempBuff, sizeof(sTempBuff));
-		strcopy(newEntry[LE_sWeaponName4], MAX_WEAPON_NAME_LENGTH, sTempBuff);
-	}
-	else
-	{
-		strcopy(newEntry[LE_sWeaponName4], MAX_WEAPON_NAME_LENGTH, "");
-	}
-	if (args >= 7)
-	{
-		GetCmdArg(7, sTempBuff, sizeof(sTempBuff));
-		strcopy(newEntry[LE_sWeaponName5], MAX_WEAPON_NAME_LENGTH, sTempBuff);
-	}
-	else
-	{
-		strcopy(newEntry[LE_sWeaponName5], MAX_WEAPON_NAME_LENGTH, "");
-	}
-	if (args >= 8)
-	{
-		GetCmdArg(8, sTempBuff, sizeof(sTempBuff));
-		strcopy(newEntry[LE_sWeaponName6], MAX_WEAPON_NAME_LENGTH, sTempBuff);
-	}
-	else
-	{
-		strcopy(newEntry[LE_sWeaponName6], MAX_WEAPON_NAME_LENGTH, "");
-	}
-	if (args >= 9)
-	{
-		GetCmdArg(9, sTempBuff, sizeof(sTempBuff));
-		strcopy(newEntry[LE_sWeaponName7], MAX_WEAPON_NAME_LENGTH, sTempBuff);
-	}
-	else
-	{
-		strcopy(newEntry[LE_sWeaponName7], MAX_WEAPON_NAME_LENGTH, "");
-	}
-	/*}*/
-
-	PushArrayArray(hEntryList, newEntry[0]);
+	PushArrayArray(hLimitArray, newEntry[0]);
+	return Plugin_Handled;
 }
 
 public Action:LockLimits_Cmd(args)
@@ -208,81 +119,51 @@ public Action:LockLimits_Cmd(args)
 	else
 	{
 		bIsLocked = true;
-		InitTries();
 	}
 }
 
 public Action:ClearLimits_Cmd(args)
 {
-	if (!bIsLocked)
-	{
-		PrintToServer("Weapon limits already unlocked");
-	}
-	else
+	if (bIsLocked)
 	{
 		bIsLocked = false;
+		PrintToChatAll("[L4D Weapon Limits] Weapon limits cleared!");
 		ClearLimits();
 	}
 }
 
-InitTries()
+public Action:WeaponCanUse(client, weapon)
 {
-	hTrieArray = CreateArray(_:TrieArrayEntry);
-	new size = GetArraySize(hEntryList);
-	decl arrayEntry[LE];
-	decl tempEntry[TrieArrayEntry];
-	/*decl j;*/
+	if (GetClientTeam(client) != 2 || !bIsLocked) return Plugin_Continue;
+	new WeaponId:wepid = IdentifyWeapon(weapon);
+
+	decl arrayEntry[LimitArrayEntry];
+	new size = GetArraySize(hLimitArray);
 	for (new i = 0; i < size; ++i)
 	{
-		GetArrayArray(hEntryList, i, arrayEntry[0]);
-		tempEntry[TAE_iLimit] = arrayEntry[LE_iLimit];
-
-		tempEntry[TAE_hTrie] = CreateTrie();
-		SetTrieValue(tempEntry[TAE_hTrie], arrayEntry[LE_sWeaponName0], 0);
-		SetTrieValue(tempEntry[TAE_hTrie], arrayEntry[LE_sWeaponName1], 0);
-		SetTrieValue(tempEntry[TAE_hTrie], arrayEntry[LE_sWeaponName2], 0);
-		SetTrieValue(tempEntry[TAE_hTrie], arrayEntry[LE_sWeaponName3], 0);
-		SetTrieValue(tempEntry[TAE_hTrie], arrayEntry[LE_sWeaponName4], 0);
-		SetTrieValue(tempEntry[TAE_hTrie], arrayEntry[LE_sWeaponName5], 0);
-		SetTrieValue(tempEntry[TAE_hTrie], arrayEntry[LE_sWeaponName6], 0);
-		SetTrieValue(tempEntry[TAE_hTrie], arrayEntry[LE_sWeaponName7], 0);
-		PushArrayArray(hTrieArray, tempEntry[0]);
-		/*for (j = 0; j < MAX_WEAPONS; ++j)*/
-		/*{*/
-			/*SetTrieValue(tempEntry[TAE_hTrie], arrayEntry[LE_sWeaponNames[j]]);*/
-		/*}*/
-	}
-	CloseHandle(hEntryList);
-}
-
-ClearLimits()
-{
-	if (hTrieArray != INVALID_HANDLE)
-	{
-		decl arrayEntry[TrieArrayEntry];
-		new size = GetArraySize(hTrieArray);
-		for (new i = 0; i < size; ++i)
+		GetArrayArray(hLimitArray, i, arrayEntry[0]);
+		if (arrayEntry[LAE_WeaponArray][_:wepid/32] & (1 << (_:wepid % 32)) && GetWeaponCount(arrayEntry[LAE_WeaponArray]) >= arrayEntry[LAE_iLimit])
 		{
-			GetArrayArray(hTrieArray, i, arrayEntry[0]);
-			CloseHandle(arrayEntry[TAE_hTrie]);
+			GiveDefaultAmmo(client);
+			return Plugin_Handled;
 		}
-		CloseHandle(hTrieArray);
 	}
+	return Plugin_Continue;
 }
 
-stock GetWeaponCount(Handle:hTrie)
+
+stock GetWeaponCount(const mask[])
 {
 	new count;
-	decl wep, String:classname[64], tmp;
+	decl WeaponId:wepid, j;
 	for (new i = 1; i < MaxClients + 1; ++i)
 	{
 		if (IsClientInGame(i) && GetClientTeam(i) == 2)
 		{
-			wep = GetPlayerWeaponSlot(i, 0);
-			if (IsValidEntity(wep))
+			for (j = 0; j < 5; ++j)
 			{
-				GetEdictClassname(wep, classname, sizeof(classname));
-				if (GetTrieValue(hTrie, classname, tmp))
+				wepid = IdentifyWeapon(GetPlayerWeaponSlot(i, j));
+				if (mask[_:wepid/32] & (1 << (_:wepid % 32)))
 				{
 					++count;
 				}
@@ -290,6 +171,18 @@ stock GetWeaponCount(Handle:hTrie)
 		}
 	}
 	return count;
+}
+
+stock ClearLimits()
+{
+	if (hLimitArray != INVALID_HANDLE)
+		ClearArray(hLimitArray);
+}
+
+stock CloseLimits()
+{
+	if (hLimitArray != INVALID_HANDLE)
+		CloseHandle(hLimitArray)
 }
 
 stock GiveDefaultAmmo(client)

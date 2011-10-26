@@ -272,7 +272,7 @@ stock WeaponId:IdentifyWeapon(entity)
 		return WeaponNameToId(class);
 	}
 	
-	return WEPID_NONE;
+	return WeaponNameToId(class);
 }
 
 // returns an entity of the new weapon spawn on success
