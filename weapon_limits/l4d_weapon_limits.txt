@@ -1,0 +1,14 @@
+"Games"
+{
+	"left4dead2"
+	{
+		"Signatures"
+		{
+			"CWeaponAmmoSpawn_Use"
+			{
+				"library" "server"
+				"linux"   "@_ZN16CWeaponAmmoSpawn3UseEP11CBaseEntityS1_8USE_TYPEf"
+			}
+		}
+	}
+}
