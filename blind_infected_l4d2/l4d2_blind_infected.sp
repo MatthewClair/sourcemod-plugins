@@ -76,7 +76,7 @@ public Action:EntCheck_Timer(Handle:timer)
 	for (new i; i < size; i++)
 	{
 		GetArrayArray(hBlockedEntities, i, currentEnt[0]);
-		if (!currentEnt[hasBeenSeen] && IsVisibleToSurvivors(currentEnt[iEntity]))
+		if (IsValidEntity(currentEnt[iEntity]) && !currentEnt[hasBeenSeen] && IsVisibleToSurvivors(currentEnt[iEntity]))
 		{
 			decl String:tmp[128];
 			GetEntPropString(currentEnt[iEntity], Prop_Data, "m_ModelName", tmp, sizeof(tmp));
