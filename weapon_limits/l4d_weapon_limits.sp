@@ -32,6 +32,7 @@ new iAmmoPile;
 public OnPluginStart()
 {
 	hLimitArray = CreateArray(_:LimitArrayEntry);
+	L4D2Weapons_Init();
 
 	/* Preparing SDK Call */
 	/* {{{ */
@@ -144,7 +145,7 @@ public Action:WeaponCanUse(client, weapon)
 		GetArrayArray(hLimitArray, i, arrayEntry[0]);
 		if (arrayEntry[LAE_WeaponArray][_:wepid/32] & (1 << (_:wepid % 32)) && GetWeaponCount(arrayEntry[LAE_WeaponArray]) >= arrayEntry[LAE_iLimit])
 		{
-			GiveDefaultAmmo(client);
+			if (GetSlotFromWeaponId(wepid) == 0) GiveDefaultAmmo(client);
 			return Plugin_Handled;
 		}
 	}
