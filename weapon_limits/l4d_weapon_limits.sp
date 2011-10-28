@@ -146,6 +146,7 @@ public Action:WeaponCanUse(client, weapon)
 		if (arrayEntry[LAE_WeaponArray][_:wepid/32] & (1 << (_:wepid % 32)) && GetWeaponCount(arrayEntry[LAE_WeaponArray]) >= arrayEntry[LAE_iLimit])
 		{
 			if (GetSlotFromWeaponId(wepid) == 0) GiveDefaultAmmo(client);
+			PrintToChat(client, "[Weapon Limits] This weapon group has reached its max of %d", arrayEntry[LAE_iLimit]);
 			return Plugin_Handled;
 		}
 	}
