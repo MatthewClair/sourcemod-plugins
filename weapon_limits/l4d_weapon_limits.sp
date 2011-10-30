@@ -14,7 +14,7 @@ public Plugin:myinfo =
 	name = "L4D Weapon Limits",
 	author = "CanadaRox",
 	description = "Restrict weapons individually or together",
-	version = "1.0",
+	version = "1.1",
 	url = "https://www.github.com/CanadaRox/sourcemod-plugins/tree/master/weapon_limits"
 }
 
