@@ -145,9 +145,14 @@ public Action:WeaponCanUse(client, weapon)
 		GetArrayArray(hLimitArray, i, arrayEntry[0]);
 		if (arrayEntry[LAE_WeaponArray][_:wepid/32] & (1 << (_:wepid % 32)) && GetWeaponCount(arrayEntry[LAE_WeaponArray]) >= arrayEntry[LAE_iLimit])
 		{
-			if (GetSlotFromWeaponId(wepid) == 0) GiveDefaultAmmo(client);
-			PrintToChat(client, "[Weapon Limits] This weapon group has reached its max of %d", arrayEntry[LAE_iLimit]);
-			return Plugin_Handled;
+			new wep_slot = GetSlotFromWeaponId(wepid);
+			new WeaponId:player_wepid = IdentifyWeapon(GetPlayerWeaponSlot(client, wep_slot));
+			if (wepid == player_wepid || !(arrayEntry[LAE_WeaponArray][_:player_wepid] & (1 << (_:player_wepid % 32))))
+			{
+				if (GetSlotFromWeaponId(wepid) == 0) GiveDefaultAmmo(client);
+				PrintToChat(client, "[Weapon Limits] This weapon group has reached its max of %d", arrayEntry[LAE_iLimit]);
+				return Plugin_Handled;
+			}
 		}
 	}
 	return Plugin_Continue;
