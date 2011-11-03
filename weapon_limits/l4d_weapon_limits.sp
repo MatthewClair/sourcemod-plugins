@@ -6,7 +6,7 @@
 #include "../weapons.inc"
 
 #define MAX_WEAPON_NAME_LENGTH 32
-#define GAMEDATA_FILE          "l4d_weapon_limits"
+#define GAMEDATA_FILE          "l4d_wlimits"
 #define GAMEDATA_USE_AMMO      "CWeaponAmmoSpawn_Use"
 
 public Plugin:myinfo =
@@ -14,7 +14,7 @@ public Plugin:myinfo =
 	name = "L4D Weapon Limits",
 	author = "CanadaRox",
 	description = "Restrict weapons individually or together",
-	version = "1.1",
+	version = "1.1a",
 	url = "https://www.github.com/CanadaRox/sourcemod-plugins/tree/master/weapon_limits"
 }
 
@@ -146,11 +146,12 @@ public Action:WeaponCanUse(client, weapon)
 		if (arrayEntry[LAE_WeaponArray][_:wepid/32] & (1 << (_:wepid % 32)) && GetWeaponCount(arrayEntry[LAE_WeaponArray]) >= arrayEntry[LAE_iLimit])
 		{
 			new wep_slot = GetSlotFromWeaponId(wepid);
-			new WeaponId:player_wepid = IdentifyWeapon(GetPlayerWeaponSlot(client, wep_slot));
-			if (wepid == player_wepid || !(arrayEntry[LAE_WeaponArray][_:player_wepid] & (1 << (_:player_wepid % 32))))
+			new player_weapon = GetPlayerWeaponSlot(client, _:wep_slot);
+			new WeaponId:player_wepid = IdentifyWeapon(player_weapon); 
+			if (!player_wepid || wepid == player_wepid || !(arrayEntry[LAE_WeaponArray][_:player_wepid/32] & (1 << (_:player_wepid % 32))))
 			{
-				if (GetSlotFromWeaponId(wepid) == 0) GiveDefaultAmmo(client);
-				PrintToChat(client, "[Weapon Limits] This weapon group has reached its max of %d", arrayEntry[LAE_iLimit]);
+				if (wep_slot == 0) GiveDefaultAmmo(client);
+				if (player_wepid) PrintToChat(client, "[Weapon Limits] This weapon group has reached its max of %d", arrayEntry[LAE_iLimit]);
 				return Plugin_Handled;
 			}
 		}
