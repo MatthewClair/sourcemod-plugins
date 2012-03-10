@@ -52,7 +52,9 @@ new const WeaponId:iIdsToBlock[] =
 	WEPID_FRAG_AMMO,
 	WEPID_PISTOL_MAGNUM,
 	WEPID_SMG_MP5,
-	WEPID_RIFLE_SG552
+	WEPID_RIFLE_SG552,
+	WEPID_SNIPER_SCOUT,
+	WEPID_SNIPER_AWP
 };
 
 new Handle:hBlockedEntities;
