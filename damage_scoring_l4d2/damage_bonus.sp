@@ -39,6 +39,7 @@ public OnPluginStart()
 	HookEvent("door_close", DoorClose_Event);
 	HookEvent("player_death", PlayerDeath_Event);
 	HookEvent("finale_vehicle_leaving", FinaleVehicleLeaving_Event, EventHookMode_PostNoCopy);
+	HookEvent("player_ledge_grab", PlayerLedgeGrab_Event);
 
 	HookEvent("round_start", RoundStart_Event, EventHookMode_PostNoCopy);
 	HookEvent("round_end", RoundEnd_Event, EventHookMode_PostNoCopy);
@@ -153,6 +154,17 @@ public OnTakeDamage(victim, attacker, inflictor, Float:damage, damagetype)
 	iHealth[victim] = (!IsSurvivor(victim) || (IsPlayerIncap(victim) && !IsPlayerHanging(victim))) ? 0 : (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim));
 }
 
+public PlayerLedgeGrab_Event(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new health = GetEntData(client, 14804, 4));
+	new temphealth = GetSurvivorPermanentHealth(client);
+	
+	iTotalDamage[iRoundNumber-1] += health + temphealth;
+
+	PrintToChatAll("Current Health: %d", GetEntData(client, 14804, 4));
+}
+
 public OnTakeDamagePost(victim, attacker, inflictor, Float:damage, damagetype)
 {
 	if (iHealth[victim])
@@ -168,7 +180,9 @@ public OnTakeDamagePost(victim, attacker, inflictor, Float:damage, damagetype)
 				iTotalDamage[iRoundNumber-1] += (iHealth[victim] - (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim)))/3;
 			}
 			else
+			{
 				iTotalDamage[iRoundNumber-1] += iHealth[victim] - (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim));
+			}
 		}
 	}
 }
