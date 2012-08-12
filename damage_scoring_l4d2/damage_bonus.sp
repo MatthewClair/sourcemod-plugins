@@ -49,7 +49,7 @@ public OnPluginStart()
 	iSurvivalBonusDefault = GetConVarInt(hSurvivalBonusCvar);
 
 	hTieBreakBonusCvar = FindConVar("vs_tiebreak_bonus");
-	iSurvivalBonusDefault = GetConVarInt(hTieBreakBonusCvar);
+	iTieBreakBonusDefault = GetConVarInt(hTieBreakBonusCvar);
 
 	// Enable Cvar
 	hPluginEnabled = CreateConVar("sm_dmgscore_enabled", "1", "Enable custom scoring based on distance, damage and survival bonus", FCVAR_PLUGIN, true, 0.0, true, 1.0);
@@ -67,6 +67,7 @@ public OnPluginStart()
 public OnPluginEnd()
 {
 	SetConVarInt(hSurvivalBonusCvar, iSurvivalBonusDefault);
+	SetConVarInt(hTieBreakBonusCvar, iTieBreakBonusDefault);
 }
 
 public OnMapStart()
@@ -157,7 +158,7 @@ public OnTakeDamage(victim, attacker, inflictor, Float:damage, damagetype)
 public PlayerLedgeGrab_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	new health = GetEntData(client, 14804, 4));
+	new health = GetEntData(client, 14804, 4);
 	new temphealth = GetSurvivorPermanentHealth(client);
 	
 	iTotalDamage[iRoundNumber-1] += health + temphealth;
