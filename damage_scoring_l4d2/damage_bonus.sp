@@ -1,7 +1,7 @@
 #include <sourcemod.inc>
 #include <sdkhooks>
 #include <sdktools>
-#include <left4downtown2>
+#include <left4downtown>
 
 #define MAX(%0,%1) (((%0) > (%1)) ? (%0) : (%1))
 
@@ -157,7 +157,7 @@ public OnTakeDamagePost(victim, attacker, inflictor, Float:damage, damagetype)
 		{
 			iTotalDamage[GameRules_GetProp("m_bInSecondHalfOfRound")] += iHealth[victim];
 		}
-		else (!IsPlayerHanging(victim))
+		else if (!IsPlayerHanging(victim))
 		{
 			iTotalDamage[GameRules_GetProp("m_bInSecondHalfOfRound")] += iHealth[victim] - (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim));
 		}
