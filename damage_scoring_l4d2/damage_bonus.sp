@@ -1,6 +1,7 @@
 #include <sourcemod.inc>
 #include <sdkhooks>
 #include <sdktools>
+#include <left4downtown2>
 
 #define MAX(%0,%1) (((%0) > (%1)) ? (%0) : (%1))
 
@@ -15,7 +16,6 @@ public Plugin:myinfo =
 
 new Handle: hSurvivalBonusCvar;
 new         iSurvivalBonusDefault;
-new         iSurvivalBonus;
 
 new Handle: hTieBreakBonusCvar;
 new         iTieBreakBonusDefault;
@@ -30,9 +30,6 @@ new Handle: hDamageMultiCvar;
 new         iHealth[MAXPLAYERS + 1];
 new         iTotalDamage[2];
 
-new         iRoundNumber;
-new bool:   bInRound;
-
 public OnPluginStart()
 {
 	// Score Change Triggers
@@ -41,7 +38,6 @@ public OnPluginStart()
 	HookEvent("finale_vehicle_leaving", FinaleVehicleLeaving_Event, EventHookMode_PostNoCopy);
 	HookEvent("player_ledge_grab", PlayerLedgeGrab_Event);
 
-	HookEvent("round_start", RoundStart_Event, EventHookMode_PostNoCopy);
 	HookEvent("round_end", RoundEnd_Event, EventHookMode_PostNoCopy);
 
 	// Save default Cvar value
@@ -76,12 +72,6 @@ public OnMapStart()
 	iTotalDamage[1] = 0;
 }
 
-public OnMapEnd()
-{
-	iRoundNumber = 0;
-	bInRound = false;
-}
-
 public OnClientPutInServer(client)
 {
 	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
@@ -100,24 +90,11 @@ public Action:Damage_Cmd(client, args)
 	}
 }
 
-public RoundStart_Event(Handle:event, const String:name[], bool:dontBroadcast)
-{
-	if (!bInRound)
-	{
-		bInRound = true;
-		iRoundNumber++;
-	}
-}
-
 public RoundEnd_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	if (bInRound)
-	{
-		bInRound = false;
+	PrintToChatAll("TODO!");
 
-		PrintToChatAll("TODO!");
-	}
-	if (iRoundNumber == 2)
+	if (GameRules_GetProp("m_bInSecondHalfOfRound"))
 	{
 		PrintToChatAll("TODO! ROUND 2!!");
 	}
@@ -152,18 +129,24 @@ public FinaleVehicleLeaving_Event(Handle:event, const String:name[], bool:dontBr
 
 public OnTakeDamage(victim, attacker, inflictor, Float:damage, damagetype)
 {
-	iHealth[victim] = (!IsSurvivor(victim) || (IsPlayerIncap(victim) && !IsPlayerHanging(victim))) ? 0 : (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim));
+	iHealth[victim] = (!IsSurvivor(victim) || IsPlayerIncap(victim)) ? 0 : (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim));
 }
 
 public PlayerLedgeGrab_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	new health = GetEntData(client, 14804, 4);
-	new temphealth = GetSurvivorPermanentHealth(client);
+	new temphealth = GetEntData(client, 14808, 4);
 	
-	iTotalDamage[iRoundNumber-1] += health + temphealth;
+	iTotalDamage[GameRules_GetProp("m_bInSecondHalfOfRound")] += health + temphealth;
+}
 
-	PrintToChatAll("Current Health: %d", GetEntData(client, 14804, 4));
+public Action:L4D2_OnRevived(client)
+{
+	new health = GetSurvivorPermanentHealth(client);
+	new temphealth = GetSurvivorTempHealth(client);
+
+	iTotalDamage[GameRules_GetProp("m_bInSecondHalfOfRound")] -= (health + temphealth);
 }
 
 public OnTakeDamagePost(victim, attacker, inflictor, Float:damage, damagetype)
@@ -172,25 +155,18 @@ public OnTakeDamagePost(victim, attacker, inflictor, Float:damage, damagetype)
 	{
 		if (!IsPlayerAlive(victim) || (IsPlayerIncap(victim) && !IsPlayerHanging(victim)))
 		{
-			iTotalDamage[iRoundNumber-1] += iHealth[victim];
+			iTotalDamage[GameRules_GetProp("m_bInSecondHalfOfRound")] += iHealth[victim];
 		}
-		else
+		else (!IsPlayerHanging(victim))
 		{
-			if (IsPlayerHanging(victim))
-			{
-				iTotalDamage[iRoundNumber-1] += (iHealth[victim] - (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim)))/3;
-			}
-			else
-			{
-				iTotalDamage[iRoundNumber-1] += iHealth[victim] - (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim));
-			}
+			iTotalDamage[GameRules_GetProp("m_bInSecondHalfOfRound")] += iHealth[victim] - (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim));
 		}
 	}
 }
 
 stock GetDamage(round=-1)
 {
-	return (round == -1) ? iTotalDamage[iRoundNumber-1] : iTotalDamage[round];
+	return (round == -1) ? iTotalDamage[GameRules_GetProp("m_bInSecondHalfOfRound")] : iTotalDamage[GameRules_GetProp("m_bInSecondHalfOfRound")];
 }
 
 stock bool:IsPlayerIncap(client) return bool:GetEntProp(client, Prop_Send, "m_isIncapacitated");
