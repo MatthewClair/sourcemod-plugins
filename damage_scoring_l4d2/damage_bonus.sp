@@ -20,15 +20,14 @@ new         iSurvivalBonusDefault;
 new Handle: hTieBreakBonusCvar;
 new         iTieBreakBonusDefault;
 
-new Handle: hPluginEnabled;
-new bool:   bPluginEnabled;
-
 new Handle: hStaticBonusCvar;
 new Handle: hMaxDamageCvar;
 new Handle: hDamageMultiCvar;
 
 new         iHealth[MAXPLAYERS + 1];
 new         iTotalDamage[2];
+new         iFirstRoundBonus;
+new         iFirstRoundSurvivors;
 
 public OnPluginStart()
 {
@@ -47,17 +46,17 @@ public OnPluginStart()
 	hTieBreakBonusCvar = FindConVar("vs_tiebreak_bonus");
 	iTieBreakBonusDefault = GetConVarInt(hTieBreakBonusCvar);
 
-	// Enable Cvar
-	hPluginEnabled = CreateConVar("sm_dmgscore_enabled", "1", "Enable custom scoring based on distance, damage and survival bonus", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	bPluginEnabled = GetConVarBool(hPluginEnabled);
-	//HookConVarChange(hPluginEnabled, CvarEnabled_Change);
-	
 	// Configuration Cvars
 	hStaticBonusCvar = CreateConVar("sm_static_bonus", "25.0", "Extra static bonus that is awarded per survivor for completing the map", FCVAR_PLUGIN, true, 0.0);
 	hMaxDamageCvar = CreateConVar("sm_max_damage", "800.0", "Max damage used for calculation (controls x in [x - damage])", FCVAR_PLUGIN);
 	hDamageMultiCvar = CreateConVar("sm_damage_multi", "1.0", "Multiplier to apply to damage before subtracting it from the max damage", FCVAR_PLUGIN, true, 0.0);
 
+	// Chat cleaning
+	AddCommandListener(Command_Say, "say");
+	AddCommandListener(Command_Say, "say_team");
+
 	RegConsoleCmd("sm_damage", Damage_Cmd, "Prints the damage taken by both teams");
+	RegConsoleCmd("sm_health", Damage_Cmd, "Prints the damage taken by both teams (Legacy option since I'll get yelled at without it!)");
 }
 
 public OnPluginEnd()
@@ -70,6 +69,8 @@ public OnMapStart()
 {
 	iTotalDamage[0] = 0;
 	iTotalDamage[1] = 0;
+	iFirstRoundBonus = 0;
+	iFirstRoundSurvivors = 0;
 }
 
 public OnClientPutInServer(client)
@@ -88,22 +89,39 @@ public Action:Damage_Cmd(client, args)
 	{
 		PrintToServer("Team 1 damage taken: %d\nTeam 2 damage taken: %d", iTotalDamage[0], iTotalDamage[1]);
 	}
+
+	return Plugin_Handled;
 }
 
 public RoundEnd_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	PrintToChatAll("TODO!");
+	new maxdmg = GetConVarInt(hMaxDamageCvar);
+	new staticbonus = GetConVarInt(hStaticBonusCvar);
+	PrintToChatAll("\x05Round 1 Damage: \x01%d, \x05Max Damage: \x01%d", iTotalDamage[0], maxdmg);
+	PrintToChatAll("\x05Alive Surivors: \x01%d, \x05Static Bonus: \x01%d", iFirstRoundSurvivors, staticbonus);
+	PrintToChatAll("\x05Math: \x01Max(%d - %d, 0) * %d / 4 + %d * %d", maxdmg, iTotalDamage[0], iFirstRoundSurvivors, staticbonus, iFirstRoundSurvivors);
+	PrintToChatAll("\x04ROUND 1 BOUNS: %d", iFirstRoundBonus);
 
 	if (GameRules_GetProp("m_bInSecondHalfOfRound"))
 	{
-		PrintToChatAll("TODO! ROUND 2!!");
+		new alivesurvs = GetAliveSurvivors();
+		PrintToChatAll("\x03===============");
+		PrintToChatAll("\x05Round 2 Damage: \x01%d, \x05Max Damage: \x01%d", iTotalDamage[1], maxdmg);
+		PrintToChatAll("\x05Alive Surivors: \x01%d, \x05Static Bonus: \x01%d", alivesurvs, staticbonus);
+		PrintToChatAll("\x05Math: \x01Max(%d - %d, 0) * %d / 4 + %d * %d", maxdmg, iTotalDamage[1], alivesurvs, staticbonus, alivesurvs);
+		PrintToChatAll("\x04ROUND 2 BOUNS: %d", GetConVarInt(hSurvivalBonusCvar));
 	}
 }
 
 public DoorClose_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (GetEventBool(event, "checkpoint"))
+	{
 		SetConVarInt(hSurvivalBonusCvar, CalculateSurvivalBonus());
+
+		iFirstRoundBonus = GetConVarInt(hSurvivalBonusCvar);
+		iFirstRoundSurvivors = GetAliveSurvivors();
+	}
 }
 
 public PlayerDeath_Event(Handle:event, const String:name[], bool:dontBroadcast)
@@ -111,7 +129,12 @@ public PlayerDeath_Event(Handle:event, const String:name[], bool:dontBroadcast)
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 
 	if (client && IsSurvivor(client))
+	{
 		SetConVarInt(hSurvivalBonusCvar, CalculateSurvivalBonus());
+
+		iFirstRoundBonus = GetConVarInt(hSurvivalBonusCvar);
+		iFirstRoundSurvivors = GetAliveSurvivors();
+	}
 }
 
 public FinaleVehicleLeaving_Event(Handle:event, const String:name[], bool:dontBroadcast)
@@ -123,8 +146,11 @@ public FinaleVehicleLeaving_Event(Handle:event, const String:name[], bool:dontBr
 			ForcePlayerSuicide(i);
 		}
 	}
-	
+
 	SetConVarInt(hSurvivalBonusCvar, CalculateSurvivalBonus());
+
+	iFirstRoundBonus = GetConVarInt(hSurvivalBonusCvar);
+	iFirstRoundSurvivors = GetAliveSurvivors();
 }
 
 public OnTakeDamage(victim, attacker, inflictor, Float:damage, damagetype)
@@ -137,7 +163,7 @@ public PlayerLedgeGrab_Event(Handle:event, const String:name[], bool:dontBroadca
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	new health = GetEntData(client, 14804, 4);
 	new temphealth = GetEntData(client, 14808, 4);
-	
+
 	iTotalDamage[GameRules_GetProp("m_bInSecondHalfOfRound")] += health + temphealth;
 }
 
@@ -164,6 +190,22 @@ public OnTakeDamagePost(victim, attacker, inflictor, Float:damage, damagetype)
 	}
 }
 
+public Action:Command_Say(client, const String:command[], args)
+{
+	if (IsChatTrigger())
+	{
+		decl String:sMessage[MAX_NAME_LENGTH];
+		GetCmdArg(1, sMessage, sizeof(sMessage));
+
+		if (StrEqual(sMessage, "!damage")) return Plugin_Handled;
+		else if (StrEqual (sMessage, "!sm_damage")) return Plugin_Handled;
+		else if (StrEqual (sMessage, "!health")) return Plugin_Handled;
+		else if (StrEqual (sMessage, "!sm_health")) return Plugin_Handled;
+	}
+
+	return Plugin_Continue;
+}
+
 stock GetDamage(round=-1)
 {
 	return (round == -1) ? iTotalDamage[GameRules_GetProp("m_bInSecondHalfOfRound")] : iTotalDamage[GameRules_GetProp("m_bInSecondHalfOfRound")];
@@ -182,8 +224,7 @@ stock GetSurvivorPermanentHealth(client) return GetEntProp(client, Prop_Send, "m
 
 stock CalculateSurvivalBonus()
 {
-	new iAliveSurvivors = GetAliveSurvivors();
-	return RoundToFloor(( MAX(GetConVarFloat(hMaxDamageCvar) - GetDamage() * GetConVarFloat(hDamageMultiCvar), 0.0) ) / iAliveSurvivors + GetConVarFloat(hStaticBonusCvar));
+	return RoundToFloor(( MAX(GetConVarFloat(hMaxDamageCvar) - GetDamage() * GetConVarFloat(hDamageMultiCvar), 0.0) ) / 4 + GetConVarFloat(hStaticBonusCvar));
 }
 
 stock GetAliveSurvivors()
