@@ -10,8 +10,8 @@ public Plugin:myinfo =
 	name = "Damage Scoring",
 	author = "CanadaRox",
 	description = "Custom damage scoring based on damage and a static bonus.  (It sounds as bad as vanilla but its not!!)",
-	version = "0.9",
-	url = "nope"
+	version = "0.99",
+	url = "https://github.com/CanadaRox/sourcemod-plugins"
 };
 
 new Handle: hSurvivalBonusCvar;
