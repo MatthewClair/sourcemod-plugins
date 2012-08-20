@@ -11,7 +11,7 @@
 #define CHANGECLASS_DELAY   0.1
 #define CLASSBLOCK_DELAY    10.0
 
-#define TEAM_CLASS(%1)		(%1 == ZC_SMOKER ? "Smoker" : (%1 == ZC_BOOMER ? "Boomer" : (%1 == ZC_HUNTER ? "Hunter" :(%1 == ZC_SPITTER ? "Spitter" : (%1 == ZC_JOCKEY ? "Jockey" : (%1 == ZC_CHARGER ? "Charger" : (%1 == ZC_WITCH ? "Witch" : (%1 == ZC_TANK ? "Tank" : "None"))))))))
+#define TEAM_CLASS(%1)      (%1 == ZC_SMOKER ? "Smoker" : (%1 == ZC_BOOMER ? "Boomer" : (%1 == ZC_HUNTER ? "Hunter" :(%1 == ZC_SPITTER ? "Spitter" : (%1 == ZC_JOCKEY ? "Jockey" : (%1 == ZC_CHARGER ? "Charger" : (%1 == ZC_WITCH ? "Witch" : (%1 == ZC_TANK ? "Tank" : "None"))))))))
 
 enum ZombieClass
 {
