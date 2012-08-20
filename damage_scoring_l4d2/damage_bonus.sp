@@ -79,6 +79,12 @@ public OnClientPutInServer(client)
 	SDKHook(client, SDKHook_OnTakeDamagePost, OnTakeDamagePost);
 }
 
+public OnClientDisconnect(client)
+{
+	SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
+	SDKUnhook(client, SDKHook_OnTakeDamagePost, OnTakeDamagePost);
+}
+
 public Action:Damage_Cmd(client, args)
 {
 	if (client)
