@@ -3,7 +3,7 @@
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
-#include <weapons.inc>
+#include <weapons>
 
 #define MAX_WEAPON_NAME_LENGTH 32
 #define GAMEDATA_FILE          "l4d_wlimits"
@@ -14,20 +14,21 @@ public Plugin:myinfo =
 	name = "L4D Weapon Limits",
 	author = "CanadaRox, Stabby",
 	description = "Restrict weapons individually or together",
-	version = "1.2b",
+	version = "1.3",
 	url = "https://www.github.com/CanadaRox/sourcemod-plugins/tree/master/weapon_limits"
 }
 
 enum LimitArrayEntry
 {
 	LAE_iLimit,
+	LAE_iGiveAmmo,
 	LAE_WeaponArray[_:WeaponId/32+1]
 }
 
 new Handle:hSDKGiveDefaultAmmo;
 new Handle:hLimitArray;
 new bIsLocked;
-new bIsIncappedWithMelee [MAXPLAYERS + 1];
+new bIsIncappedWithMelee[MAXPLAYERS + 1];
 new iAmmoPile;
 
 public OnPluginStart()
@@ -63,9 +64,9 @@ public OnPluginStart()
 
 public OnRoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	for (new i = 1; i <= MAXPLAYERS; i++)
+	for (new i = 1; i <= MaxClients; i++)
 	{
-	bIsIncappedWithMelee[i] = false;
+		bIsIncappedWithMelee[i] = false;
 	}
 }
 
