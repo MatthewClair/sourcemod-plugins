@@ -25,6 +25,7 @@ new Handle: hMaxDamageCvar;
 new Handle: hDamageMultiCvar;
 
 new         iHealth[MAXPLAYERS + 1];
+new         bTookDamage[MAXPLAYERS + 1];
 new         iTotalDamage[2];
 new         iFirstRoundBonus;
 new         iFirstRoundSurvivors;
@@ -161,7 +162,11 @@ public FinaleVehicleLeaving_Event(Handle:event, const String:name[], bool:dontBr
 
 public OnTakeDamage(victim, attacker, inflictor, Float:damage, damagetype)
 {
-	iHealth[victim] = (!IsSurvivor(victim) || IsPlayerIncap(victim)) ? 0 : (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim));
+	if (!bTookDamage[victim])
+	{
+		iHealth[victim] = (!IsSurvivor(victim) || IsPlayerIncap(victim)) ? 0 : (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim));
+		bTookDamage[victim] = true;
+	}
 }
 
 public PlayerLedgeGrab_Event(Handle:event, const String:name[], bool:dontBroadcast)
@@ -183,7 +188,7 @@ public Action:L4D2_OnRevived(client)
 
 public OnTakeDamagePost(victim, attacker, inflictor, Float:damage, damagetype)
 {
-	if (iHealth[victim])
+	if (iHealth[victim] && bTookDamage[victim])
 	{
 		if (!IsPlayerAlive(victim) || (IsPlayerIncap(victim) && !IsPlayerHanging(victim)))
 		{
@@ -193,6 +198,7 @@ public OnTakeDamagePost(victim, attacker, inflictor, Float:damage, damagetype)
 		{
 			iTotalDamage[GameRules_GetProp("m_bInSecondHalfOfRound")] += iHealth[victim] - (GetSurvivorPermanentHealth(victim) + GetSurvivorTempHealth(victim));
 		}
+		bTookDamage[victim] = false;
 	}
 }
 
