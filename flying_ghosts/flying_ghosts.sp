@@ -71,7 +71,7 @@ public Action:GroundCheck_Timer(Handle:timer, any:client)
 
 public RoundStart_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	for (new client; client <= MaxClients; client++)
+	for (new client = 1; client <= MaxClients; client++)
 	{
 		if(IsClientInGame(client))
 		{
