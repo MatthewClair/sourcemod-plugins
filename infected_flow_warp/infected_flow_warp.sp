@@ -95,6 +95,9 @@ stock GetSurvivorOfFlowRank(rank)
 		}
 	}
 	SortADTArrayCustom(hFlowArray, sortFunc);
+	new arraySize = GetArraySize(hFlowArray);
+	if (rank - 1 > arraySize)
+		rank = arraySize;
 	GetArrayArray(hFlowArray, rank - 1, currentSurv);
 	ClearArray(hFlowArray);
 
