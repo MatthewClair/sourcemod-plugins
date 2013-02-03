@@ -62,7 +62,7 @@ public Action:UnlockAI_Timer(Handle:timer, any:tank)
 	new client = GetClientOfUserId(tank);
 	if (IsClientConnected(client) && IsPlayerAlive(client) && IsFakeClient(client))
 	{
-		Thaw(client);
+		ThawTank(client);
 	}
 	//TODO: make sure this works (should probably add a zombo class check
 }
