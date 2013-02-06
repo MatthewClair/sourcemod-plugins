@@ -9,7 +9,7 @@ public Plugin:myinfo =
 	name = "Infected Flow Warp",
 	author = "CanadaRox",
 	description = "Allows infected to warp to survivors based on their flow",
-	version = "1",
+	version = "2",
 	url = "htts://github.com/CanadaRox/sourcemod-plugins/tree/master/infected_flow_warp"
 };
 
@@ -96,7 +96,7 @@ stock GetSurvivorOfFlowRank(rank)
 	}
 	SortADTArrayCustom(hFlowArray, sortFunc);
 	new arraySize = GetArraySize(hFlowArray);
-	if (rank - 1 > arraySize)
+	if (rank > arraySize)
 		rank = arraySize;
 	GetArrayArray(hFlowArray, rank - 1, currentSurv);
 	ClearArray(hFlowArray);
@@ -107,8 +107,10 @@ stock GetSurvivorOfFlowRank(rank)
 public sortFunc(index1, index2, Handle:array, Handle:hndl)
 {
 	decl item1[2];
+	GetArrayArray(array, index1, item1, 2);
 
 	decl item2[2];
+	GetArrayArray(array, index2, item2, 2);
 
 	if (Float:item1[1] > Float:item2[1])
 		return -1;
