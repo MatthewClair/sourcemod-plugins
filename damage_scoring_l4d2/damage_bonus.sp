@@ -90,13 +90,27 @@ public Action:Damage_Cmd(client, args)
 {
 	if (client)
 	{
-		PrintToChat(client, "Round 1 -> Damage: %d, Bonus: %d", iTotalDamage[0], iFirstRoundBonus);
-		PrintToChat(client, "Round 1 -> Damage: %d, Bonus: %d", iTotalDamage[1], CalculateSurvivalBonus());
+		if (!GameRules_GetProp("m_bInSecondHalfOfRound"))
+		{
+			PrintToChat(client, "Damage: %d, Bonus: %d", iTotalDamage[0], CalculateSurvivalBonus());
+		}
+		else
+		{
+			PrintToChat(client, "Round 1: Damage: %d, Bonus: %d", iTotalDamage[0], iFirstRoundBonus);
+			PrintToChat(client, "Damage: %d, Bonus: %d", iTotalDamage[1], CalculateSurvivalBonus());
+		}
 	}
 	else
 	{
-		PrintToServer("Round 1 -> Damage: %d, Bonus: %d", iTotalDamage[0], iFirstRoundBonus);
-		PrintToServer("Round 1 -> Damage: %d, Bonus: %d", iTotalDamage[1], CalculateSurvivalBonus());
+		if (!GameRules_GetProp("m_bInSecondHalfOfRound"))
+		{
+			PrintToServer("Damage: %d, Bonus: %d", iTotalDamage[0], CalculateSurvivalBonus());
+		}
+		else
+		{
+			PrintToServer("Round 1: Damage: %d, Bonus: %d", iTotalDamage[0], iFirstRoundBonus);
+			PrintToServer("Damage: %d, Bonus: %d", iTotalDamage[1], CalculateSurvivalBonus());
+		}
 	}
 
 	return Plugin_Handled;
