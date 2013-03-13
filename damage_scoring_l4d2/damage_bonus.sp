@@ -10,7 +10,7 @@ public Plugin:myinfo =
 	name = "Damage Scoring",
 	author = "CanadaRox",
 	description = "Custom damage scoring based on damage and a static bonus.  (It sounds as bad as vanilla but its not!!)",
-	version = "0.99",
+	version = "0.999",
 	url = "https://github.com/CanadaRox/sourcemod-plugins"
 };
 
@@ -38,7 +38,7 @@ public OnPluginStart()
 	HookEvent("finale_vehicle_leaving", FinaleVehicleLeaving_Event, EventHookMode_PostNoCopy);
 	HookEvent("player_ledge_grab", PlayerLedgeGrab_Event);
 
-	HookEvent("round_end", RoundEnd_Event, EventHookMode_PostNoCopy);
+	HookEvent("round_end", RoundEnd_Event);
 
 	// Save default Cvar value
 	hSurvivalBonusCvar = FindConVar("vs_survival_bonus");
@@ -90,11 +90,13 @@ public Action:Damage_Cmd(client, args)
 {
 	if (client)
 	{
-		PrintToChat(client, "Team 1 damage taken: %d\nTeam 2 damage taken: %d", iTotalDamage[0], iTotalDamage[1]);
+		PrintToChat(client, "Round 1 -> Damage: %d, Bonus: %d", iTotalDamage[0], iFirstRoundBonus);
+		PrintToChat(client, "Round 1 -> Damage: %d, Bonus: %d", iTotalDamage[1], CalculateSurvivalBonus());
 	}
 	else
 	{
-		PrintToServer("Team 1 damage taken: %d\nTeam 2 damage taken: %d", iTotalDamage[0], iTotalDamage[1]);
+		PrintToServer("Round 1 -> Damage: %d, Bonus: %d", iTotalDamage[0], iFirstRoundBonus);
+		PrintToServer("Round 1 -> Damage: %d, Bonus: %d", iTotalDamage[1], CalculateSurvivalBonus());
 	}
 
 	return Plugin_Handled;
@@ -102,21 +104,15 @@ public Action:Damage_Cmd(client, args)
 
 public RoundEnd_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	new maxdmg = GetConVarInt(hMaxDamageCvar);
-	new staticbonus = GetConVarInt(hStaticBonusCvar);
-	PrintToChatAll("\x05Round 1 Damage: \x01%d, \x05Max Damage: \x01%d", iTotalDamage[0], maxdmg);
-	PrintToChatAll("\x05Alive Surivors: \x01%d, \x05Static Bonus: \x01%d", iFirstRoundSurvivors, staticbonus);
-	PrintToChatAll("\x05Math: \x01Max(%d - %d, 0) * %d / 4 + %d * %d", maxdmg, iTotalDamage[0], iFirstRoundSurvivors, staticbonus, iFirstRoundSurvivors);
-	PrintToChatAll("\x04ROUND 1 BOUNS: %d", iFirstRoundBonus);
-
-	if (GameRules_GetProp("m_bInSecondHalfOfRound"))
+	new reason = GetEventInt(event, "reason");
+	if (reason == 5)
 	{
-		new alivesurvs = GetAliveSurvivors();
-		PrintToChatAll("\x03===============");
-		PrintToChatAll("\x05Round 2 Damage: \x01%d, \x05Max Damage: \x01%d", iTotalDamage[1], maxdmg);
-		PrintToChatAll("\x05Alive Surivors: \x01%d, \x05Static Bonus: \x01%d", alivesurvs, staticbonus);
-		PrintToChatAll("\x05Math: \x01Max(%d - %d, 0) * %d / 4 + %d * %d", maxdmg, iTotalDamage[1], alivesurvs, staticbonus, alivesurvs);
-		PrintToChatAll("\x04ROUND 2 BOUNS: %d", GetConVarInt(hSurvivalBonusCvar));
+		PrintToChatAll("\x04Round 1 Bonus: \x01 %d", iFirstRoundBonus);
+
+		if (GameRules_GetProp("m_bInSecondHalfOfRound"))
+		{
+			PrintToChatAll("\x04Round 2 Bonus: %d", GetConVarInt(hSurvivalBonusCvar));
+		}
 	}
 }
 
@@ -126,8 +122,8 @@ public DoorClose_Event(Handle:event, const String:name[], bool:dontBroadcast)
 	{
 		SetConVarInt(hSurvivalBonusCvar, CalculateSurvivalBonus());
 
-		iFirstRoundBonus = GetConVarInt(hSurvivalBonusCvar);
 		iFirstRoundSurvivors = GetAliveSurvivors();
+		iFirstRoundBonus = GetConVarInt(hSurvivalBonusCvar) * iFirstRoundSurvivors;
 	}
 }
 
