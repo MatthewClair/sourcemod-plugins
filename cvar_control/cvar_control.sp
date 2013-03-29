@@ -5,6 +5,15 @@
 #define CVAR_MAXLEN 64
 #define MAX_MAPNAME_LEN 64
 
+public Plugin:myinfo =
+{
+	name = "Cvar Control",
+	author = "CanadaRox",
+	description = "Allows setting cvars per map",
+	version = "1",
+	url = "http://github.com/CanadaRox/sourcemod-plugins/"
+};
+
 enum CvarEntry
 {
 	Handle:CE_cvar,
