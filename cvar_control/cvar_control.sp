@@ -40,7 +40,8 @@ public OnPluginStart()
 
 public RoundStartPreEnt_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	SetEnforcedCvars();
+	if (bTrackingStarted)
+		SetEnforcedCvars();
 }
 
 public Action:SetCvars_Cmd(args)
@@ -116,7 +117,6 @@ public Action:AddCvar_Cmd(args)
 	GetCmdArg(2, cvar,    sizeof(cvar));
 	GetCmdArg(3, newval,  sizeof(newval));
 
-
 	AddCvar(mapname, cvar, newval);
 
 	return Plugin_Handled;
@@ -167,7 +167,6 @@ AddCvar(const String:mapname[], const String:cvar[], const String:newval[])
 		mapArray = CreateArray(_:CvarEntry);
 		SetTrieValue(CvarMapTrie, mapname, mapArray);
 		PushArrayCell(MapArrays, mapArray);
-		PrintToChatAll("Created new map array");
 	}
 	decl newEntry[CvarEntry];
 	decl String:cvarBuffer[CVAR_MAXLEN];
@@ -180,7 +179,6 @@ AddCvar(const String:mapname[], const String:cvar[], const String:newval[])
 		{
 			strcopy(newEntry[CE_newval], CVAR_MAXLEN, newval);
 			SetArrayArray(mapArray, i, newEntry[0]);
-			PrintToChatAll("Already found this cvar, updated to new value");
 			alreadyExists = true;
 		}
 	}
@@ -195,7 +193,6 @@ AddCvar(const String:mapname[], const String:cvar[], const String:newval[])
 
 		HookConVarChange(newCvar, ConVarChange);
 		PushArrayArray(mapArray, newEntry[0]);
-		PrintToChatAll("New cvar, adding to array");
 	}
 }
 
