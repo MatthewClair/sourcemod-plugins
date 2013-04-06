@@ -4,7 +4,7 @@
 #include <weapons.inc>
 
 #define TEAM_SURVIVOR 2
-#define MAX_DIST_SQUARED 10000 /* 100^2, about an mouse2 melee range*/
+#define MAX_DIST_SQUARED 22500 /* 150^2, same as finale spawn range, melee range is ~100 units but felt much too short */
 
 public Plugin:myinfo =
 {
