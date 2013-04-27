@@ -5,6 +5,9 @@
 
 #define MAX(%0,%1) (((%0) > (%1)) ? (%0) : (%1))
 
+#define TEAM_SURVIVOR   2
+
+
 public Plugin:myinfo =
 {
 	name = "Damage Scoring",
@@ -13,6 +16,8 @@ public Plugin:myinfo =
 	version = "0.999",
 	url = "https://github.com/CanadaRox/sourcemod-plugins"
 };
+
+new Handle: hTeamSize;
 
 new Handle: hSurvivalBonusCvar;
 new         iSurvivalBonusDefault;
@@ -27,8 +32,13 @@ new Handle: hDamageMultiCvar;
 new         iHealth[MAXPLAYERS + 1];
 new         bTookDamage[MAXPLAYERS + 1];
 new         iTotalDamage[2];
-new         iFirstRoundBonus;
-new         iFirstRoundSurvivors;
+new bool:   bHasWiped[2];                   // true if they didn't get the bonus...
+new bool:   bRoundOver[2];                  // whether the bonus will still change or not
+new         iStoreBonus[2];                 // what was the actual bonus?
+new         iStoreSurvivors[2];             // how many survived that round?
+
+
+
 
 public OnPluginStart()
 {
@@ -47,6 +57,8 @@ public OnPluginStart()
 	hTieBreakBonusCvar = FindConVar("vs_tiebreak_bonus");
 	iTieBreakBonusDefault = GetConVarInt(hTieBreakBonusCvar);
 
+    hTeamSize = FindConVar("survivor_limit");
+    
 	// Configuration Cvars
 	hStaticBonusCvar = CreateConVar("sm_static_bonus", "25.0", "Extra static bonus that is awarded per survivor for completing the map", FCVAR_PLUGIN, true, 0.0);
 	hMaxDamageCvar = CreateConVar("sm_max_damage", "800.0", "Max damage used for calculation (controls x in [x - damage])", FCVAR_PLUGIN);
@@ -68,10 +80,14 @@ public OnPluginEnd()
 
 public OnMapStart()
 {
-	iTotalDamage[0] = 0;
-	iTotalDamage[1] = 0;
-	iFirstRoundBonus = 0;
-	iFirstRoundSurvivors = 0;
+    for (new i=0; i < 2; i++)
+    {
+        iTotalDamage[i] = 0;
+        iStoreBonus[i] = 0;
+        iStoreSurvivors[i] = 0;
+        bRoundOver[i] = false;
+        bHasWiped[i] = false;
+    }
 }
 
 public OnClientPutInServer(client)
@@ -88,45 +104,24 @@ public OnClientDisconnect(client)
 
 public Action:Damage_Cmd(client, args)
 {
-	if (client)
-	{
-		if (!GameRules_GetProp("m_bInSecondHalfOfRound"))
-		{
-			PrintToChat(client, "Damage: %d, Bonus: %d", iTotalDamage[0], CalculateSurvivalBonus() * GetAliveSurvivors());
-		}
-		else
-		{
-			PrintToChat(client, "Round 1: Damage: %d, Bonus: %d", iTotalDamage[0], iFirstRoundBonus);
-			PrintToChat(client, "Damage: %d, Bonus: %d", iTotalDamage[1], CalculateSurvivalBonus() * GetAliveSurvivors());
-		}
-	}
-	else
-	{
-		if (!GameRules_GetProp("m_bInSecondHalfOfRound"))
-		{
-			PrintToServer("Damage: %d, Bonus: %d", iTotalDamage[0], CalculateSurvivalBonus() * GetAliveSurvivors());
-		}
-		else
-		{
-			PrintToServer("Round 1: Damage: %d, Bonus: %d", iTotalDamage[0], iFirstRoundBonus);
-			PrintToServer("Damage: %d, Bonus: %d", iTotalDamage[1], CalculateSurvivalBonus() * GetAliveSurvivors());
-		}
-	}
-
+    DisplayBonus(client);
 	return Plugin_Handled;
 }
 
 public RoundEnd_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
+    // set whether the round was a wipe or not
+    if (!GetUprightSurvivors()) {
+        bHasWiped[GameRules_GetProp("m_bInSecondHalfOfRound")] = true;
+    }
+    
+    // when round is over, 
+    bRoundOver[GameRules_GetProp("m_bInSecondHalfOfRound")] = true;
+
 	new reason = GetEventInt(event, "reason");
 	if (reason == 5)
 	{
-		PrintToChatAll("\x04Round 1 Bonus: \x01 %d", iFirstRoundBonus);
-
-		if (GameRules_GetProp("m_bInSecondHalfOfRound"))
-		{
-			PrintToChatAll("\x04Round 2 Bonus: %d", GetConVarInt(hSurvivalBonusCvar));
-		}
+        DisplayBonus();
 	}
 }
 
@@ -135,9 +130,7 @@ public DoorClose_Event(Handle:event, const String:name[], bool:dontBroadcast)
 	if (GetEventBool(event, "checkpoint"))
 	{
 		SetConVarInt(hSurvivalBonusCvar, CalculateSurvivalBonus());
-
-		iFirstRoundSurvivors = GetAliveSurvivors();
-		iFirstRoundBonus = GetConVarInt(hSurvivalBonusCvar) * iFirstRoundSurvivors;
+        StoreBonus();
 	}
 }
 
@@ -148,9 +141,7 @@ public PlayerDeath_Event(Handle:event, const String:name[], bool:dontBroadcast)
 	if (client && IsSurvivor(client))
 	{
 		SetConVarInt(hSurvivalBonusCvar, CalculateSurvivalBonus());
-
-		iFirstRoundBonus = GetConVarInt(hSurvivalBonusCvar);
-		iFirstRoundSurvivors = GetAliveSurvivors();
+        StoreBonus();
 	}
 }
 
@@ -165,9 +156,7 @@ public FinaleVehicleLeaving_Event(Handle:event, const String:name[], bool:dontBr
 	}
 
 	SetConVarInt(hSurvivalBonusCvar, CalculateSurvivalBonus());
-
-	iFirstRoundBonus = GetConVarInt(hSurvivalBonusCvar);
-	iFirstRoundSurvivors = GetAliveSurvivors();
+    StoreBonus();
 }
 
 public OnTakeDamage(victim, attacker, inflictor, Float:damage, damagetype)
@@ -227,11 +216,54 @@ public Action:Command_Say(client, const String:command[], args)
 
 stock GetDamage(round=-1)
 {
-	return (round == -1) ? iTotalDamage[GameRules_GetProp("m_bInSecondHalfOfRound")] : iTotalDamage[GameRules_GetProp("m_bInSecondHalfOfRound")];
+    return (round == -1) ? iTotalDamage[GameRules_GetProp("m_bInSecondHalfOfRound")] : iTotalDamage[round];
+}
+
+stock StoreBonus()
+{
+    // store bonus for display
+    new round = GameRules_GetProp("m_bInSecondHalfOfRound");
+    new aliveSurvs = GetAliveSurvivors();
+    
+    iStoreBonus[round] = GetConVarInt(hSurvivalBonusCvar) * aliveSurvs;
+    iStoreSurvivors[round] = GetAliveSurvivors();
+}
+
+stock DisplayBonus(client=-1)
+{
+    new String:msgPartHdr[48];
+    new String:msgPartDmg[48];
+    
+    for (new round = 0; round <= GameRules_GetProp("m_bInSecondHalfOfRound"); round++)
+    {
+        if (bRoundOver[round]) {
+            Format(msgPartHdr, sizeof(msgPartHdr), "Round \x05%i\x01 bonus", round+1);
+        } else {
+            Format(msgPartHdr, sizeof(msgPartHdr), "Current Bonus");
+        }
+
+        if (bHasWiped[round]) {
+            Format(msgPartDmg, sizeof(msgPartDmg), "\x03wipe\x01 (\x05%4d\x01 damage)", iTotalDamage[round]);
+        } else {
+            Format(msgPartDmg, sizeof(msgPartDmg), "\x04%4d\x01 (\x05%4d\x01 damage)",
+                    (bRoundOver[round]) ? iStoreBonus[round] : CalculateSurvivalBonus() * GetAliveSurvivors(),
+                    iTotalDamage[round]
+                );
+        }
+        
+        if (client == -1) {
+            PrintToChatAll("\x01%s: %s", msgPartHdr, msgPartDmg);
+        } else if (client) {
+            PrintToChat(client, "\x01%s: %s", msgPartHdr, msgPartDmg);
+        } else {
+            PrintToServer("\x01%s: %s", msgPartHdr, msgPartDmg);
+        }
+    }
 }
 
 stock bool:IsPlayerIncap(client) return bool:GetEntProp(client, Prop_Send, "m_isIncapacitated");
 stock bool:IsPlayerHanging(client) return bool:GetEntProp(client, Prop_Send, "m_isHangingFromLedge");
+stock bool:IsPlayerLedgedAtAll(client) return bool:(GetEntProp(client, Prop_Send, "m_isHangingFromLedge") | GetEntProp(client, Prop_Send, "m_isFallingFromLedge"));
 
 stock GetSurvivorTempHealth(client)
 {
@@ -250,7 +282,8 @@ stock GetAliveSurvivors()
 {
 	new iAliveCount;
 	new iSurvivorCount;
-	for (new i = 1; i < MaxClients && iSurvivorCount < 4; i++)
+    new maxSurvs = (hTeamSize != INVALID_HANDLE) ? GetConVarInt(hTeamSize) : 4;
+    for (new i = 1; i < MaxClients && iSurvivorCount < maxSurvs; i++)
 	{
 		if (IsSurvivor(i))
 		{
@@ -261,7 +294,25 @@ stock GetAliveSurvivors()
 	return iAliveCount;
 }
 
+stock GetUprightSurvivors()
+{
+    new iAliveCount;
+    new iSurvivorCount;
+    new maxSurvs = (hTeamSize != INVALID_HANDLE) ? GetConVarInt(hTeamSize) : 4;
+    for (new i=1; i < MaxClients && iSurvivorCount < maxSurvs; i++) {
+        if (IsSurvivor(i)) {
+            iSurvivorCount++;
+            if (IsPlayerAlive(i) && !IsPlayerIncap(i) && !IsPlayerLedgedAtAll(i)) {
+                iAliveCount++;
+            }
+        }
+    }
+    return iAliveCount;
+}
+
 stock bool:IsSurvivor(client)
 {
-	return IsClientInGame(client) && GetClientTeam(client) == 2;
+    return IsClientAndInGame(client) && GetClientTeam(client) == TEAM_SURVIVOR;
 }
+
+stock bool:IsClientAndInGame(index) return (index > 0 && index <= MaxClients && IsClientInGame(index));
