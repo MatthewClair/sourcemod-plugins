@@ -1,4 +1,5 @@
 #include <l4d2util_infected>
+#include <left4downtown>
 
 #define COOLDOWN 0.5
 
