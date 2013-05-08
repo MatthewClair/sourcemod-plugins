@@ -152,11 +152,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 				g_bIsHoldingKey[client] = true;
 				g_bIsChangingClass[client] = true;
 
-				new ZombieClass:nextclass = g_ZC_NextClass[client];
-				while (nextclass == g_ZC_LastZombieDeath || g_bIsClassTimeBlocked[nextclass])
-				{
-					if (nextclass == g_ZC_LastZombieDeath) nextclass = ZombieClass:(_:nextclass % 6 + 1);
-				}
+				new ZombieClass:nextclass = GetSafeSpawnClass(client, true);
 				SetZombieClass(client, nextclass);
 				g_ZC_NextClass[client] = ZombieClass:(_:nextclass % 6 + 1);
 				CreateTimer(CHANGECLASS_DELAY, ChangingClassDelay_Timer, client, TIMER_FLAG_NO_MAPCHANGE);
@@ -183,7 +179,7 @@ public Action:ZomboCmd(client, args)
 public Action:DebugCmd(client, args)
 {
 	PrintToChat(client, "Alive=%d, Infected=%d, Ghost=%d", IsPlayerAlive(client), IsPlayerZombie(client), IsPlayerGhost(client));
-	PrintToChat(client, "m_zombieClass=%s, g_ZC_NextZombie=%s", TEAM_CLASS(GetZombieClass(client)), TEAM_CLASS(g_ZC_NextClass[client]));
+	PrintToChat(client, "m_zombieClass=%s, g_ZC_NextClass=%s", TEAM_CLASS(GetZombieClass(client)), TEAM_CLASS(g_ZC_NextClass[client]));
 	PrintToChat(client, "g_bIsChangingClass=%d, g_bIsHoldingKey=%d", g_bIsHoldingKey[client], g_bIsHoldingKey[client]);
 
 	return Plugin_Handled;
@@ -254,20 +250,20 @@ public Action:SpawnDelay_Timer(Handle:timer, any:client)
 	return Plugin_Stop;
 }
 
-stock ZombieClass:GetSafeSpawnClass(client)
+stock ZombieClass:GetSafeSpawnClass(client, bool:findNext = false)
 {
 	new bool:bClassFree[ZombieClass] =
 	{
-		false,
-		true,
-		true,
-		true,
-		true,
-		true,
-		true,
-		false,
-		false,
-		false
+		false, // ZC_NONE = 0,
+		true,  // ZC_SMOKER,
+		true,  // ZC_BOOMER,
+		true,  // ZC_HUNTER,
+		true,  // ZC_SPITTER,
+		true,  // ZC_JOCKEY,
+		true,  // ZC_CHARGER,
+		false, // ZC_WITCH,
+		false, // ZC_TANK,
+		false  // ZC_NOTINFECTE
 	};
 		
 	decl ZombieClass:class;
@@ -287,9 +283,25 @@ stock ZombieClass:GetSafeSpawnClass(client)
 			}
 		}
 	}
-	for (class = ZC_SMOKER; class <= ZC_CHARGER; class++)
+	if (findNext)
 	{
-		if (bClassFree[class]) return class;
+		new i;
+		while (g_ZC_NextClass[client] == g_ZC_LastZombieDeath || g_bIsClassTimeBlocked[g_ZC_NextClass[client]] || !bClassFree[g_ZC_NextClass[client]] || i > 8)
+		{
+			g_ZC_NextClass[client] = ZombieClass:((_:g_ZC_NextClass[client] + 1) % 6) + 1;
+			i++;
+		}
+		if (i <= 8)
+		{
+			return g_ZC_NextClass[client];
+		}
+	}
+	else
+	{
+		for (class = ZC_SMOKER; class <= ZC_CHARGER; class++)
+		{
+			if (bClassFree[class]) return class;
+		}
 	}
 	return ZC_NONE;
 }
