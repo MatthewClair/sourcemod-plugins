@@ -25,7 +25,7 @@ public Plugin:myinfo =
 	name = "Jockey Deadstop Fixer",
 	author = "CanadaRox",
 	description = "Fixes jockeys being instantly killed by deadstops or having deadstops not register if bash-kills are blocked",
-	version = "1",
+	version = "2",
 	url = "https://github.com/CanadaRox/sourcemod-plugins/jockey_fix/"
 };
 
