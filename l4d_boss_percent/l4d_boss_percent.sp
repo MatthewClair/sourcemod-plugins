@@ -78,7 +78,7 @@ public OnRoundIsLive()
 
 public RoundStartEvent(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	CreateTimer(1.0, SaveBossFlows);
+	CreateTimer(5.0, SaveBossFlows);
 }
 
 public Action:SaveBossFlows(Handle:timer)

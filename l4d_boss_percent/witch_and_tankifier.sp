@@ -2,7 +2,7 @@
 
 /* This is the "safe zone" around the tank spawn */
 #define MIN_BOSS_VARIANCE (0.2)
-#define DEBUG 0
+#define DEBUG 1
 
 #include <sourcemod>
 #include <sdktools>
@@ -43,6 +43,9 @@ public OnPluginStart()
 	RegServerCmd("static_tank_map", StaticTank_Command);
 	RegServerCmd("reset_static_maps", Reset_Command);
 
+	RegAdminCmd("sm_setwitch", SetWitch_Command, ADMFLAG_BAN);
+	RegAdminCmd("sm_settank", SetTank_Command, ADMFLAG_BAN);
+
 #if DEBUG
 	RegConsoleCmd("sm_doshit", DoShit_Cmd);
 #endif
@@ -53,6 +56,9 @@ public Action:StaticWitch_Command(args)
 	decl String:mapname[64];
 	GetCmdArg(1, mapname, sizeof(mapname));
 	SetTrieValue(hStaticWitchMaps, mapname, true);
+#if DEBUG
+	PrintToChatAll("Added %s", mapname);
+#endif
 }
 
 public Action:StaticTank_Command(args)
@@ -60,6 +66,9 @@ public Action:StaticTank_Command(args)
 	decl String:mapname[64];
 	GetCmdArg(1, mapname, sizeof(mapname));
 	SetTrieValue(hStaticTankMaps, mapname, true);
+#if DEBUG
+	PrintToChatAll("Added %s", mapname);
+#endif
 }
 
 public Action:Reset_Command(args)
@@ -83,6 +92,26 @@ public Action:DoShit_Cmd(client, args)
 }
 #endif
 
+public Action:SetWitch_Command(client, args)
+{
+	decl String:buffer[8];
+	GetCmdArg(1, buffer, sizeof(buffer));
+	new Float:fWitchFlow = StringToFloat(buffer);
+	L4D2Direct_SetVSWitchFlowPercent(0, fWitchFlow);
+	L4D2Direct_SetVSWitchFlowPercent(1, fWitchFlow);
+	PrintToChatAll("[SM] Witch Spawn forced to %f by %N", fWitchFlow, client);
+}
+
+public Action:SetTank_Command(client, args)
+{
+	decl String:buffer[8];
+	GetCmdArg(1, buffer, sizeof(buffer));
+	new Float:fTankFlow = StringToFloat(buffer);
+	L4D2Direct_SetVSTankFlowPercent(0, fTankFlow);
+	L4D2Direct_SetVSTankFlowPercent(1, fTankFlow);
+	PrintToChatAll("[SM] Tank Spawn forced to %f by %N", fTankFlow, client);
+}
+
 public Action:AdjustBossFlow(Handle:timer)
 {
 	if (InSecondHalfOfRound()) return;
@@ -98,6 +127,9 @@ public Action:AdjustBossFlow(Handle:timer)
 
 	if (!GetTrieValue(hStaticTankMaps, sCurMap, dummy))
 	{
+#if DEBUG
+		PrintToChatAll("Not static tank map");
+#endif
 		new Float:fMinBanFlow = L4D2_GetMapValueInt("tank_ban_flow_min", -1) / 100.0;
 		new Float:fMaxBanFlow = L4D2_GetMapValueInt("tank_ban_flow_max", -1) / 100.0;
 		new Float:fBanRange = fMaxBanFlow - fMinBanFlow;
@@ -122,10 +154,20 @@ public Action:AdjustBossFlow(Handle:timer)
 		L4D2Direct_SetVSTankFlowPercent(0, fTankFlow);
 		L4D2Direct_SetVSTankFlowPercent(1, fTankFlow);
 	}
-
+	else
+	{
+		L4D2Direct_SetVSTankToSpawnThisRound(0, false);
+		L4D2Direct_SetVSTankToSpawnThisRound(1, false);
+#if DEBUG
+		PrintToChatAll("Static tank map");
+#endif
+	}
 
 	if (!GetTrieValue(hStaticWitchMaps, sCurMap, dummy))
 	{
+#if DEBUG
+		PrintToChatAll("Not static witch map");
+#endif
 		new iMinWitchFlow = L4D2_GetMapValueInt("witch_flow_min", -1);
 		new iMaxWitchFlow = L4D2_GetMapValueInt("witch_flow_max", -1);
 		new Float:fMinWitchFlow = iMinWitchFlow == -1 ? fCvarMinFlow : iMinWitchFlow / 100.0;
@@ -151,6 +193,14 @@ public Action:AdjustBossFlow(Handle:timer)
 		L4D2Direct_SetVSWitchToSpawnThisRound(1, true);
 		L4D2Direct_SetVSWitchFlowPercent(0, fWitchFlow);
 		L4D2Direct_SetVSWitchFlowPercent(1, fWitchFlow);
+	}
+	else
+	{
+		L4D2Direct_SetVSWitchToSpawnThisRound(0, false);
+		L4D2Direct_SetVSWitchToSpawnThisRound(1, false);
+#if DEBUG
+		PrintToChatAll("Static witch map");
+#endif
 	}
 }
 
