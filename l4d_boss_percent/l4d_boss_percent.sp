@@ -115,11 +115,11 @@ public Action:SaveBossFlows(Handle:timer)
 		if (iWitchPercent && iTankPercent)
 			Format(readyString, sizeof(readyString), "Tank: %d%%, Witch: %d%%", iTankPercent, iWitchPercent);
 		else if (iTankPercent)
-			Format(readyString, sizeof(readyString), "Tank: %d%%, Witch: None", iTankPercent, iWitchPercent);
+			Format(readyString, sizeof(readyString), "Tank: %d%%, Witch: None", iTankPercent);
 		else if (iWitchPercent)
-			Format(readyString, sizeof(readyString), "Tank: None, Witch: %d%%", iTankPercent, iWitchPercent);
+			Format(readyString, sizeof(readyString), "Tank: None, Witch: %d%%", iWitchPercent);
 		else
-			Format(readyString, sizeof(readyString), "Tank: None, Witch: None", iTankPercent, iWitchPercent);
+			Format(readyString, sizeof(readyString), "Tank: None, Witch: None");
 		AddStringToReadyFooter(readyString);
 	}
 }
