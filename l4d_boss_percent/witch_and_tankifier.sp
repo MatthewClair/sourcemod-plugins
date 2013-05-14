@@ -2,7 +2,7 @@
 
 /* This is the "safe zone" around the tank spawn */
 #define MIN_BOSS_VARIANCE (0.2)
-#define DEBUG 1
+#define DEBUG 0
 
 #include <sourcemod>
 #include <sdktools>
@@ -17,7 +17,7 @@ public Plugin:myinfo =
 	name = "Witch and Tankifier!",
 	author = "CanadaRox",
 	version = "1",
-	description = "Sets a tank and witch spawn point on every map with a minimum 0.05 flow variation"
+	description = "Sets a tank and witch spawn point on every map with a 0.2 safety zone around tank"
 };
 
 new Handle:g_hVsBossBuffer;
