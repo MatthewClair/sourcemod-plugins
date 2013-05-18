@@ -38,9 +38,6 @@ new         iStoreBonus[2];                 // what was the actual bonus?
 new         iStoreSurvivors[2];             // how many survived that round?
 new Float:  fMapDistance;
 
-
-
-
 public OnPluginStart()
 {
 	// Score Change Triggers
@@ -246,9 +243,9 @@ stock DisplayBonus(client=-1)
 		}
 
 		if (bHasWiped[round]) {
-			Format(msgPartDmg, sizeof(msgPartDmg), "\x03wipe\x01 (\x05%4d\x01 damage)", iTotalDamage[round]);
+			Format(msgPartDmg, sizeof(msgPartDmg), "\x03wipe\x01 (\x05%d\x01 damage)", iTotalDamage[round]);
 		} else {
-			Format(msgPartDmg, sizeof(msgPartDmg), "\x04%4d\x01 (\x05%4d\x01 damage)",
+			Format(msgPartDmg, sizeof(msgPartDmg), "\x04%d\x01 (\x05%d\x01 damage)",
 					(bRoundOver[round]) ? iStoreBonus[round] : CalculateSurvivalBonus() * GetAliveSurvivors(),
 					iTotalDamage[round]
 				  );
