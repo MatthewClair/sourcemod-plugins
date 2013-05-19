@@ -52,7 +52,7 @@ public OnPluginStart()
 	HookEvent("round_end", RoundEnd_Event);
 
 	// Save default Cvar value
-	hSurvivalBonusCvar = FindConVar("vs_survival_bonus");
+	hSurvivalBonusCvar = CreateConVar("vs_survival_bonus_dummy", "25", "Dummy cvar that wont do anything.");
 	iSurvivalBonusDefault = GetConVarInt(hSurvivalBonusCvar);
 
 	hTieBreakBonusCvar = FindConVar("vs_tiebreak_bonus");
@@ -278,7 +278,7 @@ stock GetSurvivorPermanentHealth(client) return GetEntProp(client, Prop_Send, "m
 
 stock CalculateSurvivalBonus()
 {	//this is the old non-distance-related calculation
-	if (GetConVarFloat(hMapMulti == 0.0) {
+	if (GetConVarFloat(hMapMulti) == 0.0) {
 		return RoundToFloor(( MAX(GetConVarFloat(hMaxDamageCvar) - GetDamage() * GetConVarFloat(hDamageMultiCvar), 0.0) ) / 4 + GetConVarFloat(hStaticBonusCvar));
 	} else {
 		return RoundToFloor(((MAX(GetConVarFloat(hMaxDamageCvar) - GetDamage() * GetConVarFloat(hDamageMultiCvar), 0.0)) * (fMapDistance * GetConVarFloat(hMapMulti)) / GetConVarFloat(hMaxDamageCvar)) / 4 + GetConVarFloat(hStaticBonusCvar));
