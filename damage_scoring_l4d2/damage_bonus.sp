@@ -64,7 +64,7 @@ public OnPluginStart()
 	hStaticBonusCvar = CreateConVar("sm_static_bonus", "25.0", "Extra static bonus that is awarded per survivor for completing the map", FCVAR_PLUGIN, true, 0.0);
 	hMaxDamageCvar = CreateConVar("sm_max_damage", "800.0", "Max damage used for calculation (controls x in [x - damage])", FCVAR_PLUGIN);
 	hDamageMultiCvar = CreateConVar("sm_damage_multi", "1.0", "Multiplier to apply to damage before subtracting it from the max damage", FCVAR_PLUGIN, true, 0.0);
-	hMapMulti = CreateConVar("sm_damage_mapmulti", "0.0", "Disabled if zero, else scales damage bonus with map distance and this factor", FCVAR_PLUGIN, true, 0.0);
+	hMapMulti = CreateConVar("sm_damage_mapmulti", "1.0", "Disabled if zero, else scales damage bonus with map distance and this factor", FCVAR_PLUGIN, true, 0.0);
 	
 	// Chat cleaning
 	AddCommandListener(Command_Say, "say");
