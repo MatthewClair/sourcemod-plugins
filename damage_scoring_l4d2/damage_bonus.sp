@@ -1,4 +1,4 @@
-#include <sourcemod.inc>
+#include <sourcemod>
 #include <sdkhooks>
 #include <sdktools>
 #include <left4downtown>
@@ -10,7 +10,7 @@
 public Plugin:myinfo =
 {
 	name = "Damage Scoring",
-	author = "CanadaRox, Tabun, CircleSquared",
+	author = "CanadaRox, Stabby",
 	description = "Custom damage scoring based on damage and a static bonus.  (It sounds as bad as vanilla but its not!!)",
 	version = "0.9999",
 	url = "https://github.com/CanadaRox/sourcemod-plugins"
@@ -64,7 +64,7 @@ public OnPluginStart()
 	hStaticBonusCvar = CreateConVar("sm_static_bonus", "25.0", "Extra static bonus that is awarded per survivor for completing the map", FCVAR_PLUGIN, true, 0.0);
 	hMaxDamageCvar = CreateConVar("sm_max_damage", "800.0", "Max damage used for calculation (controls x in [x - damage])", FCVAR_PLUGIN);
 	hDamageMultiCvar = CreateConVar("sm_damage_multi", "1.0", "Multiplier to apply to damage before subtracting it from the max damage", FCVAR_PLUGIN, true, 0.0);
-	hMapMulti = CreateConVar("sm_damage_mapmulti", "1.0", "Disabled if zero, else scales damage bonus with map distance and this factor", FCVAR_PLUGIN, true, 0.0);
+	hMapMulti = CreateConVar("sm_damage_mapmulti", "2.0", "Disabled if zero, else sm_max_damage will be ignored and max bonus will be replaced by [map distance]*[this factor]", FCVAR_PLUGIN, true, 0.0);
 	
 	// Chat cleaning
 	AddCommandListener(Command_Say, "say");
@@ -82,8 +82,8 @@ public OnPluginEnd()
 
 public OnMapStart()
 {
-	fMapDistance = float(GetMapMaxScore());
-	for (new i=0; i < 2; i++)
+	fMapDistance = L4D_GetVersusMaxCompletionScore();
+	for (new i = 0; i < 2; i++)
 	{
 		iTotalDamage[i] = 0;
 		iStoreBonus[i] = 0;
@@ -277,13 +277,14 @@ stock GetSurvivorTempHealth(client)
 stock GetSurvivorPermanentHealth(client) return GetEntProp(client, Prop_Send, "m_iHealth");
 
 stock CalculateSurvivalBonus()
-{	//this is the old non-distance-related calculation
+{
 	if (GetConVarFloat(hMapMulti) == 0.0) {
 		return RoundToFloor(( MAX(GetConVarFloat(hMaxDamageCvar) - GetDamage() * GetConVarFloat(hDamageMultiCvar), 0.0) ) / 4 + GetConVarFloat(hStaticBonusCvar));
 	} else {
-		return RoundToFloor(((MAX(GetConVarFloat(hMaxDamageCvar) - GetDamage() * GetConVarFloat(hDamageMultiCvar), 0.0)) * (fMapDistance * GetConVarFloat(hMapMulti)) / GetConVarFloat(hMaxDamageCvar)) / 4 + GetConVarFloat(hStaticBonusCvar));
+		return RoundToFloor((MAX(GetConVarFloat(hMapMulti) * fMapDistance - GetDamage() * GetConVarFloat(hDamageMultiCvar), 0.0)) / 4 + GetConVarFloat(hStaticBonusCvar));
 	}
 }
+
 
 stock GetAliveSurvivors()
 {
@@ -306,7 +307,7 @@ stock GetUprightSurvivors()
 	new iAliveCount;
 	new iSurvivorCount;
 	new maxSurvs = (hTeamSize != INVALID_HANDLE) ? GetConVarInt(hTeamSize) : 4;
-	for (new i=1; i < MaxClients && iSurvivorCount < maxSurvs; i++) {
+	for (new i = 1; i < MaxClients && iSurvivorCount < maxSurvs; i++) {
 		if (IsSurvivor(i)) {
 			iSurvivorCount++;
 			if (IsPlayerAlive(i) && !IsPlayerIncap(i) && !IsPlayerLedgedAtAll(i)) {
@@ -323,8 +324,3 @@ stock bool:IsSurvivor(client)
 }
 
 stock bool:IsClientAndInGame(index) return (index > 0 && index <= MaxClients && IsClientInGame(index));
-
-stock GetMapMaxScore()
-{
-	return L4D_GetVersusMaxCompletionScore();
-}
