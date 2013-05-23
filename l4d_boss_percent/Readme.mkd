@@ -1,0 +1,25 @@
+A replacement plugin for (what I believe to be) overcomplicated boss percent plugins.  Two different plugins.  One is purely for printing boss percents (`l4d_boss_percent.sp`) and one for setting tank and witch spawns (`witch_and_tankifier.sp`).
+
+`l4d_boss_percent.sp` has the basic configuration options of older versions.  You can choose what to print out and have it print to everyone or just the player running the command.
+
+	l4d_global_percent 1
+	l4d_tank_percent 1
+	l4d_witch_percent 1
+
+The three commands all perform the same function and are the same as before:
+
+	sm_boss
+	sm_witch
+	sm_tank
+
+`witch_and_tankifier.sp` sets a witch and tank to spawn on every map at the same point.  You no longer have to set boss spawn chance as this overrides that.  To set a map to not have a witch or tank (static maps or maps that shouldn't or can't have one) use:
+
+	static_witch_map "mapname"
+	static_tank_map "mapname"
+	// Ex: static_witch_map c6m1_riverbank
+
+Then `confogl_off.cfg` needs to have `reset_static_maps`.
+
+This plugin also has two admin commands for manually setting tank and witch spawns.  In the event of a server crash this can be used to set the same boss spawn location.  **NOTE** This will not be 100% identical as it is in a normal match.  The printed number is rounded to the nearest whole number so 41% may be 40.5% - 41.5%.  Also the exact spawn coordinates are not saved like they are with Confogl.  It is possible that tank spawns can vary by a small amount which could force survivors over a one-way or a tank to spawn significantly farther from the survivors.  If this is used for a tournament match make sure you make sure the second spawn is close enough to the first to be acceptable.
+
+There is also a third plugin `current.sp` that just prints the current flow of the survivors.
