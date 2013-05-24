@@ -1,11 +1,16 @@
 #pragma semicolon 1
 
 #include <sourcemod>
+#include <l4d2_direct>
 #define L4D2UTIL_STOCKS_ONLY
 #include <l4d2util>
 #undef REQUIRE_PLUGIN
 #include <readyup>
 #include <pause>
+
+#define MAX(%0,%1) (((%0) > (%1)) ? (%0) : (%1))
+#define EXTRA_FLOW 3000.0
+#define RESPAWN_FREQ 5.0
 
 new Handle:	hEnabled;
 new bool:	bEnabled;
@@ -57,9 +62,17 @@ public OnLibraryAdded(const String:name[])
 	if (StrEqual(name, "pause")) pauseIsAvailable = true;
 }
 
+public OnMapStart()
+{
+	CreateTimer(RESPAWN_FREQ, WitchRespawn_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+}
+
 public OnRoundIsLive()
 {
-	hWitchSpawnTimer = CreateTimer(fSpawnFreq, WitchSpawn_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	if (fSpawnFreq >= 1.0)
+	{
+		hWitchSpawnTimer = CreateTimer(fSpawnFreq, WitchSpawn_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	}
 }
 
 public RoundStart_Event(Handle:event, const String:name[], bool:dontBroadcast)
@@ -91,7 +104,10 @@ public Freq_Changed(Handle:convar, const String:oldValue[], const String:newValu
 		CloseHandle(hWitchSpawnTimer);
 	}
 	fSpawnFreq = GetConVarFloat(hSpawnFreq);
-	hWitchSpawnTimer = CreateTimer(fSpawnFreq, WitchSpawn_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	if (fSpawnFreq >= 1.0)
+	{
+		hWitchSpawnTimer = CreateTimer(fSpawnFreq, WitchSpawn_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	}
 }
 
 public Action:WitchSpawn_Timer(Handle:timer)
@@ -112,6 +128,81 @@ public Action:WitchSpawn_Timer(Handle:timer)
 			}
 		}
 	}
-	}
 	return Plugin_Continue;
+}
+
+public Action:WitchRespawn_Timer(Handle:timer)
+{
+	if (bEnabled && !IsTankInPlay()
+			&& ((pauseIsAvailable && !IsInPause()) || !pauseIsAvailable)
+			&& ((readyUpIsAvailable && !IsInReady()) || !readyUpIsAvailable))
+	{
+		new psychonic = GetMaxEntities();
+		decl String:buffer[64];
+		decl Address:pNavArea;
+		decl Float:flow;
+		new Float:survMaxFlow = GetMaxSurvivorCompletion();
+		new witchSpawnCount = 0;
+		decl Float:origin[3];
+
+		if (survMaxFlow > EXTRA_FLOW)
+		{
+			for (new entity = MaxClients+1; entity <= psychonic; entity++)
+			{
+				if (IsValidEntity(entity)
+						&& GetEntityClassname(entity, buffer, sizeof(buffer))
+						&& StrEqual(buffer, "witch"))
+				{
+					GetEntPropVector(entity, Prop_Send, "m_vecOrigin", origin);
+					pNavArea = L4D2Direct_GetTerrorNavArea(origin);
+					flow = L4D2Direct_GetTerrorNavAreaFlow(pNavArea);
+					if (survMaxFlow > flow + EXTRA_FLOW)
+					{
+						AcceptEntityInput(entity, "Kill");
+						witchSpawnCount++;
+					}
+				}
+			}
+		}
+
+		if (witchSpawnCount)
+		{
+			for (new client = 1; client <= MaxClients; client++)
+			{
+				if(IsClientInGame(client))
+				{
+					new flags = GetCommandFlags("z_spawn");
+					SetCommandFlags("z_spawn", flags ^ FCVAR_CHEAT);
+					for (new i = 0; i < witchSpawnCount; i++)
+					{
+						FakeClientCommand(client, "z_spawn witch auto");
+					}
+					SetCommandFlags("z_spawn", flags);
+				}
+			}
+		}
+	}
+}
+
+stock Float:GetMaxSurvivorCompletion()
+{
+	new Float:flow = 0.0;
+	decl Float:tmp_flow;
+	decl Float:origin[3];
+	decl Address:pNavArea;
+	for (new client = 1; client <= MaxClients; client++)
+	{
+		if(IsClientInGame(client) &&
+				L4D2_Team:GetClientTeam(client) == L4D2Team_Survivor)
+		{
+			GetClientAbsOrigin(client, origin);
+			pNavArea = L4D2Direct_GetTerrorNavArea(origin);
+			if (pNavArea != Address_Null)
+			{
+				tmp_flow = L4D2Direct_GetTerrorNavAreaFlow(pNavArea);
+				flow = MAX(flow, tmp_flow);
+			}
+		}
+	}
+	return flow;
 }
