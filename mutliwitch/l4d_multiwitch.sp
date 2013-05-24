@@ -79,7 +79,10 @@ public RoundStart_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (!readyUpIsAvailable)
 	{
-		hWitchSpawnTimer = CreateTimer(fSpawnFreq, WitchSpawn_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		if (fSpawnFreq >= 1.0)
+		{
+			hWitchSpawnTimer = CreateTimer(fSpawnFreq, WitchSpawn_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		}
 	}
 }
 
