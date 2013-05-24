@@ -71,7 +71,7 @@ stock PrintCurrentToTeam(L4D2_Team:team)
 
 stock GetMaxSurvivorCompletion()
 {
-	decl Float:flow;
+	new Float:flow = 0.0;
 	decl Float:tmp_flow;
 	decl Float:origin[3];
 	decl Address:pNavArea;
