@@ -178,6 +178,7 @@ public Action:WitchRespawn_Timer(Handle:timer)
 						FakeClientCommand(client, "z_spawn witch auto");
 					}
 					SetCommandFlags("z_spawn", flags);
+					break;
 				}
 			}
 		}
