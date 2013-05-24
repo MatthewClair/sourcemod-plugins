@@ -23,6 +23,15 @@ new Handle:	hWitchSpawnTimer;
 new bool:readyUpIsAvailable;
 new bool:pauseIsAvailable;
 
+public Plugin:myinfo =
+{
+	name = "L4D2 Multiwitch",
+	author = "CanadaRox",
+	description = "A plugin that spawns unlimited witches off of a timer.",
+	version = "1",
+	url = "https://github.com/CanadaRox/sourcemod-plugins/tree/master/mutliwitch"
+};
+
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 {
 	MarkNativeAsOptional("IsInReady");
