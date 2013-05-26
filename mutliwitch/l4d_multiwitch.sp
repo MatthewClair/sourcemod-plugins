@@ -73,6 +73,7 @@ public OnLibraryAdded(const String:name[])
 
 public OnMapStart()
 {
+	hWitchSpawnTimer = INVALID_HANDLE;
 	CreateTimer(RESPAWN_FREQ, WitchRespawn_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
 
