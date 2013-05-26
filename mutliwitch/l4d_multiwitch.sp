@@ -114,6 +114,7 @@ public Freq_Changed(Handle:convar, const String:oldValue[], const String:newValu
 	if (hWitchSpawnTimer != INVALID_HANDLE)
 	{
 		CloseHandle(hWitchSpawnTimer);
+		hWitchSpawnTimer = INVALID_HANDLE;
 	}
 	fSpawnFreq = GetConVarFloat(hSpawnFreq);
 	if (fSpawnFreq >= 1.0)
