@@ -156,6 +156,7 @@ public Action:WitchRespawn_Timer(Handle:timer)
 		new Float:survMaxFlow = GetMaxSurvivorCompletion();
 		new witchSpawnCount = 0;
 		decl Float:origin[3];
+		decl m_nSequence;
 
 		if (survMaxFlow > EXTRA_FLOW)
 		{
@@ -165,13 +166,38 @@ public Action:WitchRespawn_Timer(Handle:timer)
 						&& GetEntityClassname(entity, buffer, sizeof(buffer))
 						&& StrEqual(buffer, "witch"))
 				{
-					GetEntPropVector(entity, Prop_Send, "m_vecOrigin", origin);
-					pNavArea = L4D2Direct_GetTerrorNavArea(origin);
-					flow = L4D2Direct_GetTerrorNavAreaFlow(pNavArea);
-					if (survMaxFlow > flow + EXTRA_FLOW)
+					m_nSequence = GetEntProp(entity, Prop_Send, "m_nSequence");
+
+					/* Wandering witch: */
+					/* standing - 2 */
+					/* wandering - 10, 11 */
+					/* time startle - 30 */
+
+					/* Sitting witch: */
+					/* sitting - 4 */
+					/* angry - 27 */
+					/* full anger - 29 */
+
+					/* Both: */
+					/* running - 6 */
+					/* jump climbing - 66 */
+					/* ladder climbing - 72, 74 */
+					/* dying - 74 */
+
+					/* We only want to respawn fully passive witches */
+					switch (m_nSequence)
 					{
-						AcceptEntityInput(entity, "Kill");
-						witchSpawnCount++;
+						case 2, 10, 11, 4:
+							{
+								GetEntPropVector(entity, Prop_Send, "m_vecOrigin", origin);
+								pNavArea = L4D2Direct_GetTerrorNavArea(origin);
+								flow = L4D2Direct_GetTerrorNavAreaFlow(pNavArea);
+								if (survMaxFlow > flow + EXTRA_FLOW)
+								{
+									AcceptEntityInput(entity, "Kill");
+									witchSpawnCount++;
+								}
+							}
 					}
 				}
 			}
