@@ -80,6 +80,10 @@ public OnRoundIsLive()
 {
 	if (fSpawnFreq >= 1.0)
 	{
+		if (hWitchSpawnTimer != INVALID_HANDLE)
+		{
+			CloseHandle(hWitchSpawnTimer);
+		}
 		hWitchSpawnTimer = CreateTimer(fSpawnFreq, WitchSpawn_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	}
 }
@@ -90,6 +94,10 @@ public RoundStart_Event(Handle:event, const String:name[], bool:dontBroadcast)
 	{
 		if (fSpawnFreq >= 1.0)
 		{
+			if (hWitchSpawnTimer != INVALID_HANDLE)
+			{
+				CloseHandle(hWitchSpawnTimer);
+			}
 			hWitchSpawnTimer = CreateTimer(fSpawnFreq, WitchSpawn_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
