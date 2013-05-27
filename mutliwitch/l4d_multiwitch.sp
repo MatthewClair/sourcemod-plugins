@@ -78,7 +78,11 @@ public OnMapStart()
 
 public OnMapEnd()
 {
-	hWitchSpawnTimer = INVALID_HANDLE;
+	if (hWitchSpawnTimer != INVALID_HANDLE)
+	{
+		CloseHandle(hWitchSpawnTimer);
+		hWitchSpawnTimer = INVALID_HANDLE;
+	}
 }
 
 public OnRoundIsLive()
@@ -89,7 +93,7 @@ public OnRoundIsLive()
 		{
 			CloseHandle(hWitchSpawnTimer);
 		}
-		hWitchSpawnTimer = CreateTimer(fSpawnFreq, WitchSpawn_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		hWitchSpawnTimer = CreateTimer(fSpawnFreq, WitchSpawn_Timer, _, TIMER_REPEAT);
 	}
 }
 
@@ -103,7 +107,7 @@ public RoundStart_Event(Handle:event, const String:name[], bool:dontBroadcast)
 			{
 				CloseHandle(hWitchSpawnTimer);
 			}
-			hWitchSpawnTimer = CreateTimer(fSpawnFreq, WitchSpawn_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			hWitchSpawnTimer = CreateTimer(fSpawnFreq, WitchSpawn_Timer, _, TIMER_REPEAT);
 		}
 	}
 }
@@ -132,7 +136,7 @@ public Freq_Changed(Handle:convar, const String:oldValue[], const String:newValu
 	fSpawnFreq = GetConVarFloat(hSpawnFreq);
 	if (fSpawnFreq >= 1.0)
 	{
-		hWitchSpawnTimer = CreateTimer(fSpawnFreq, WitchSpawn_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		hWitchSpawnTimer = CreateTimer(fSpawnFreq, WitchSpawn_Timer, _, TIMER_REPEAT);
 	}
 }
 
