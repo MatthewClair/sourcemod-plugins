@@ -10,7 +10,7 @@ public Plugin:myinfo =
 	name = "Witch Glows",
 	author = "CanadaRox",
 	description = "Sets glows on witches when survivors are far away",
-	version = "1",
+	version = "1.1",
 	url = "https://github.com/CanadaRox/sourcemod-plugins/tree/master/mutliwitch"
 };
 
@@ -33,21 +33,24 @@ public MinRangeChange(Handle:convar, const String:oldValue[], const String:newVa
 
 public OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
 {
-	new psychonic = GetEntityCount();
-	decl Float:clientOrigin[3];
-	GetClientAbsOrigin(client, clientOrigin);
-	decl Float:witchOrigin[3];
-	decl String:buffer[32];
-	for (new entity = MaxClients + 1; entity < psychonic; entity++)
+	if (IsPlayerAlive(client) && GetClientTeam(client) == 2)
 	{
-		if (IsValidEntity(entity)
-				&& GetEntityClassname(entity, buffer, sizeof(buffer))
-				&& StrEqual(buffer, "witch"))
+		new psychonic = GetEntityCount();
+		decl Float:clientOrigin[3];
+		GetClientAbsOrigin(client, clientOrigin);
+		decl Float:witchOrigin[3];
+		decl String:buffer[32];
+		for (new entity = MaxClients + 1; entity < psychonic; entity++)
 		{
-			GetEntPropVector(entity, Prop_Send, "m_vecOrigin", witchOrigin);
-			if (GetVectorDistance(clientOrigin, witchOrigin, true) < minRangeSquared)
+			if (IsValidEntity(entity)
+					&& GetEntityClassname(entity, buffer, sizeof(buffer))
+					&& StrEqual(buffer, "witch"))
 			{
-				SetEntProp(entity, Prop_Send, "m_iGlowType", 0);
+				GetEntPropVector(entity, Prop_Send, "m_vecOrigin", witchOrigin);
+				if (GetVectorDistance(clientOrigin, witchOrigin, true) < minRangeSquared)
+				{
+					SetEntProp(entity, Prop_Send, "m_iGlowType", 0);
+				}
 			}
 		}
 	}
