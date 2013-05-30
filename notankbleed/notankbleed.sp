@@ -8,7 +8,7 @@ public Plugin:myinfo =
 	name = "No Tank Bleed",
 	author = "CanadaRox",
 	description = "Stop temp health from decaying during a tank fight",
-	version = "1",
+	version = "2",
 	url = "https://github.com/CanadaRox/sourcemod-plugins/tree/master/notankbleed"
 };
 
@@ -19,9 +19,48 @@ public OnPluginStart()
 {
 	pain_pills_decay_rate = FindConVar("pain_pills_decay_rate");
 	defaultRate = GetConVarFloat(pain_pills_decay_rate);
+
+#if defined DEBUG
+	RegConsoleCmd("sm_temptest", TempTest_Cmd);
+#endif
+
+	HookEvent("round_end", RoundEnd_Event, EventHookMode_PostNoCopy);
+}
+
+public OnPluginEnd()
+{
+	SetConVarFloat(pain_pills_decay_rate, defaultRate);
+}
+
+#if defined DEGUB
+public Action:TempTest_Cmd(client, args)
+{
+	new Float:currentTemp = GetSurvivorTempHealth(client);
+	PrintToChat(client, "Current temp: %f", currentTemp);
+	SetSurvivorTempHealth(client, currentTemp);
+	PrintToChat(client, "New temp: %f", GetSurvivorTempHealth(client));
+}
+#endif
+
+public RoundEnd_Event(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	SetNewRate(defaultRate);
 }
 
 public OnTankSpawn(iTank)
+{
+	SetNewRate(0.0);
+}
+
+public OnTankDeath(iOldTank)
+{
+	if (NumTanksInPlay() <= 1) /* This is 1 when the last tank dies */
+	{
+		SetNewRate(defaultRate);
+	}
+}
+
+stock SetNewRate(Float:rate = 0.0)
 {
 	for (new client = 1; client <= MaxClients; client++)
 	{
@@ -30,34 +69,17 @@ public OnTankSpawn(iTank)
 			SetSurvivorTempHealth(client, GetSurvivorTempHealth(client));
 		}
 	}
-	SetConVarFloat(pain_pills_decay_rate, 0.0);
+	SetConVarFloat(pain_pills_decay_rate, rate);
 }
 
-public OnTankDeath(iOldTank)
+
+stock Float:GetSurvivorTempHealth(client)
 {
-	if (NumTanksInPlay() <= 1) /* This is 1 when the last tank dies */
-	{
-		for (new client = 1; client <= MaxClients; client++)
-		{
-			if(IsClientInGame(client) && GetClientTeam(client) == 2 && IsPlayerAlive(client))
-			{
-				SetSurvivorTempHealth(client, GetSurvivorTempHealth(client));
-			}
-		}
-	}
-	SetConVarFloat(pain_pills_decay_rate, defaultRate);
+	return GetEntPropFloat(client, Prop_Send, "m_healthBuffer") - ((GetGameTime() - GetEntPropFloat(client, Prop_Send, "m_healthBufferTime")) * GetConVarFloat(FindConVar("pain_pills_decay_rate")));
 }
 
-
-stock GetSurvivorTempHealth(client)
-{
-	new temphp = RoundToCeil(GetEntPropFloat(client, Prop_Send, "m_healthBuffer") - ((GetGameTime() - GetEntPropFloat(client, Prop_Send, "m_healthBufferTime")) * GetConVarFloat(FindConVar("pain_pills_decay_rate")))) - 1;
-	return temphp > 0 ? temphp : 0;
-}
-
-stock SetSurvivorTempHealth(client, hp)
+stock SetSurvivorTempHealth(client, Float:newOverheal)
 {
 	SetEntPropFloat(client, Prop_Send, "m_healthBufferTime", GetGameTime());
-	new Float:newOverheal = hp * 1.0;
 	SetEntPropFloat(client, Prop_Send, "m_healthBuffer", newOverheal);
 }
