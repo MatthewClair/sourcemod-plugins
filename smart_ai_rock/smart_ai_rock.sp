@@ -14,13 +14,10 @@ public Plugin:myinfo =
 
 public Action:L4D2_OnSelectTankAttack(client, &sequence)
 {
-	PrintToChatAll("seq: %d", sequence);
 	if (IsFakeClient(client) && sequence == 50)
 	{
 		sequence = GetRandomInt(0, 1) ? 49 : 51;
-		PrintToChatAll("new seq: %d\n", sequence);
 		return Plugin_Handled;
 	}
-	PrintToChatAll("no change");
 	return Plugin_Continue;
 }
