@@ -260,26 +260,36 @@ stock DisplayBonus(client=-1)
 
 	for (new round = 0; round <= GameRules_GetProp("m_bInSecondHalfOfRound"); round++)
 	{
-		if (bRoundOver[round]) {
+		if (bRoundOver[round])
+		{
 			Format(msgPartHdr, sizeof(msgPartHdr), "Round \x05%i\x01 bonus", round+1);
-		} else {
+		}
+		else
+		{
 			Format(msgPartHdr, sizeof(msgPartHdr), "Current Bonus");
 		}
 
-		if (bHasWiped[round]) {
+		if (bHasWiped[round])
+		{
 			Format(msgPartDmg, sizeof(msgPartDmg), "\x03wipe\x01 (\x05%d\x01 damage)", iTotalDamage[round]);
-		} else {
+		}
+		else
+		{
 			Format(msgPartDmg, sizeof(msgPartDmg), "\x04%d\x01 (\x05%d\x01 damage)",
 					(bRoundOver[round]) ? iStoreBonus[round] : CalculateSurvivalBonus() * GetAliveSurvivors(),
-					iTotalDamage[round]
-				  );
+					iTotalDamage[round]);
 		}
 
-		if (client == -1) {
+		if (client == -1)
+		{
 			PrintToChatAll("\x01%s: %s", msgPartHdr, msgPartDmg);
-		} else if (client) {
+		}
+		else if (client)
+		{
 			PrintToChat(client, "\x01%s: %s", msgPartHdr, msgPartDmg);
-		} else {
+		}
+		else
+		{
 			PrintToServer("\x01%s: %s", msgPartHdr, msgPartDmg);
 		}
 	}
@@ -299,9 +309,12 @@ stock GetSurvivorPermanentHealth(client) return GetEntProp(client, Prop_Send, "m
 
 stock CalculateSurvivalBonus()
 {
-	if (GetConVarFloat(hMapMulti) == 0.0) {
+	if (GetConVarFloat(hMapMulti) == 0.0)
+	{
 		return RoundToFloor(( MAX(GetConVarFloat(hMaxDamageCvar) - GetDamage() * GetConVarFloat(hDamageMultiCvar), 0.0) ) / 4 + GetConVarFloat(hStaticBonusCvar));
-	} else {
+	}
+	else
+	{
 		return RoundToFloor((MAX(GetConVarFloat(hMapMulti) * fMapDistance - GetDamage() * GetConVarFloat(hDamageMultiCvar), 0.0)) / 4 + GetConVarFloat(hStaticBonusCvar));
 	}
 }
@@ -327,10 +340,13 @@ stock GetUprightSurvivors()
 	new iAliveCount;
 	new iSurvivorCount;
 	new maxSurvs = (hTeamSize != INVALID_HANDLE) ? GetConVarInt(hTeamSize) : 4;
-	for (new i = 1; i < MaxClients && iSurvivorCount < maxSurvs; i++) {
-		if (IsSurvivor(i)) {
+	for (new i = 1; i < MaxClients && iSurvivorCount < maxSurvs; i++)
+	{
+		if (IsSurvivor(i))
+		{
 			iSurvivorCount++;
-			if (IsPlayerAlive(i) && !IsPlayerIncap(i) && !IsPlayerLedgedAtAll(i)) {
+			if (IsPlayerAlive(i) && !IsPlayerIncap(i) && !IsPlayerLedgedAtAll(i))
+			{
 				iAliveCount++;
 			}
 		}
