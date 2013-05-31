@@ -70,7 +70,7 @@ public OnPluginStart()
 	hStaticBonusCvar = CreateConVar("sm_static_bonus", "25.0", "Extra static bonus that is awarded per survivor for completing the map", FCVAR_PLUGIN, true, 0.0);
 	hMaxDamageCvar = CreateConVar("sm_max_damage", "800.0", "Max damage used for calculation (controls x in [x - damage])", FCVAR_PLUGIN);
 	hDamageMultiCvar = CreateConVar("sm_damage_multi", "1.0", "Multiplier to apply to damage before subtracting it from the max damage", FCVAR_PLUGIN, true, 0.0);
-	hMapMulti = CreateConVar("sm_damage_mapmulti", "2.0", "Disabled if zero, else sm_max_damage will be ignored and max bonus will be replaced by [map distance]*[this factor]", FCVAR_PLUGIN, true, 0.0);
+	hMapMulti = CreateConVar("sm_damage_mapmulti", "-1", "Disabled if negative, else sm_max_damage will be ignored and max bonus will be replaced by [map distance]*[this factor]", FCVAR_PLUGIN, true, 0.0);
 	
 	// Chat cleaning
 	AddCommandListener(Command_Say, "say");
@@ -309,7 +309,7 @@ stock GetSurvivorPermanentHealth(client) return GetEntProp(client, Prop_Send, "m
 
 stock CalculateSurvivalBonus()
 {
-	if (GetConVarFloat(hMapMulti) == 0.0)
+	if (GetConVarFloat(hMapMulti) < 0)
 	{
 		return RoundToFloor(( MAX(GetConVarFloat(hMaxDamageCvar) - GetDamage() * GetConVarFloat(hDamageMultiCvar), 0.0) ) / 4 + GetConVarFloat(hStaticBonusCvar));
 	}
