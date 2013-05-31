@@ -171,7 +171,7 @@ public PlayerDeath_Event(Handle:event, const String:name[], bool:dontBroadcast)
 
 public FinaleVehicleLeaving_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	for (new i = 1; i < MaxClients; i++)
+	for (new i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientInGame(i) && IsSurvivor(i) && IsPlayerIncap(i))
 		{
@@ -324,7 +324,7 @@ stock GetAliveSurvivors()
 	new iAliveCount;
 	new iSurvivorCount;
 	new maxSurvs = (hTeamSize != INVALID_HANDLE) ? GetConVarInt(hTeamSize) : 4;
-	for (new i = 1; i < MaxClients && iSurvivorCount < maxSurvs; i++)
+	for (new i = 1; i <= MaxClients && iSurvivorCount < maxSurvs; i++)
 	{
 		if (IsSurvivor(i))
 		{
@@ -340,7 +340,7 @@ stock GetUprightSurvivors()
 	new iAliveCount;
 	new iSurvivorCount;
 	new maxSurvs = (hTeamSize != INVALID_HANDLE) ? GetConVarInt(hTeamSize) : 4;
-	for (new i = 1; i < MaxClients && iSurvivorCount < maxSurvs; i++)
+	for (new i = 1; i <= MaxClients && iSurvivorCount < maxSurvs; i++)
 	{
 		if (IsSurvivor(i))
 		{
