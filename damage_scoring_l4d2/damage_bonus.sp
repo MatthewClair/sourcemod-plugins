@@ -38,6 +38,15 @@ new         iStoreBonus[2];                 // what was the actual bonus?
 new         iStoreSurvivors[2];             // how many survived that round?
 new Float:  fMapDistance;
 
+public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
+{
+	CreateNative("DamageBonus_GetCurrentBonus", Native_GetCurrentBonus);
+	CreateNative("DamageBonus_GetRoundBonus", Native_GetRoundBonus);
+	CreateNative("DamageBonus_GetRoundDamage", Native_GetRoundDamage);
+	RegPluginLibrary("l4d2_damagebonus");
+	return APLRes_Success;
+}
+
 public OnPluginStart()
 {
 	// Score Change Triggers
@@ -75,6 +84,21 @@ public OnPluginEnd()
 {
 	SetConVarInt(hSurvivalBonusCvar, iSurvivalBonusDefault);
 	SetConVarInt(hTieBreakBonusCvar, iTieBreakBonusDefault);
+}
+
+public Native_GetCurrentBonus(Handle:plugin, numParams)
+{
+	return CalculateSurvivalBonus() * GetAliveSurvivors();
+}
+
+public Native_GetRoundBonus(Handle:plugin, numParams)
+{
+	return iStoreBonus[GetNativeCell(1)];
+}
+
+public Native_GetRoundDamage(Handle:plugin, numParams)
+{
+	return iTotalDamage[GetNativeCell(1)];
 }
 
 public OnMapStart()
