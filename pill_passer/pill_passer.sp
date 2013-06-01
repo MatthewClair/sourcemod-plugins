@@ -1,7 +1,7 @@
 #pragma semicolon 1
 
 #include <sourcemod>
-#include "../weapons.inc"
+#include <weapons>
 
 #define TEAM_SURVIVOR 2
 #define MAX_DIST_SQUARED 48400 /* Normal pill pass range is ~220 units */
