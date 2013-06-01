@@ -21,6 +21,14 @@ public OnPluginStart()
 	HookEvent("round_start", RoundStart_Event, EventHookMode_PostNoCopy);
 }
 
+public OnMapStart()
+{
+	for (new client = 1; client <= MAXPLAYERS; client++)
+	{
+		hGroundCheckTimer[client] = INVALID_HANDLE;
+	}
+}
+
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3],
 		Float:angles[3], &weapon)
 {
@@ -63,6 +71,7 @@ public Action:GroundCheck_Timer(Handle:timer, any:client)
 	if (clientFlags & FL_ONGROUND)
 	{
 		bBlockSpawn[client] = false;
+		hGroundCheckTimer[client] = INVALID_HANDLE;
 		return Plugin_Stop;
 	}
 	return Plugin_Continue;
