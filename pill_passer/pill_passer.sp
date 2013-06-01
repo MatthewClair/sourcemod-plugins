@@ -4,7 +4,7 @@
 #include "../weapons.inc"
 
 #define TEAM_SURVIVOR 2
-#define MAX_DIST_SQUARED 22500 /* 150^2, same as finale spawn range, melee range is ~100 units but felt much too short */
+#define MAX_DIST_SQUARED 48400 /* Normal pill pass range is ~220 units */
 #define TRACE_TOLERANCE 30.0
 
 public Plugin:myinfo =
@@ -12,23 +12,9 @@ public Plugin:myinfo =
 	name = "Easier Pill Passer",
 	author = "CanadaRox",
 	description = "Lets players pass pills and adrenaline with +reload when they are holding one of those items",
-	version = "1",
+	version = "2",
 	url = "http://github.com/CanadaRox/sourcemod-plugins/"
 };
-
-new Handle:hEnableGhettoLagComp;
-new bool:bGhettoLagComp;
-
-public OnPluginStart()
-{
-	hEnableGhettoLagComp = CreateConVar("epp_ghetto_lag_comp", "1", "Enables ghetto lag comp to try to make passing pills even easier", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	HookConVarChange(hEnableGhettoLagComp, GhettoComp_Changed);
-}
-
-public GhettoComp_Changed (Handle:convar, const String:oldValue[], const String:newValue[])
-{
-	bGhettoLagComp = GetConVarBool(hEnableGhettoLagComp);
-}
 
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
 {
@@ -49,8 +35,9 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 				GetClientAbsOrigin(target, targetOrigin);
 				if (GetVectorDistance(clientOrigin, targetOrigin, true) < MAX_DIST_SQUARED)
 				{
-					if ((IsVisibleTo(client, target) && !bGhettoLagComp)
-							|| (IsVisibleTo(client, target, true) && bGhettoLagComp))
+					/*if ((IsVisibleTo(client, target) && !bGhettoLagComp)*/
+							/*|| (IsVisibleTo(client, target, true) && bGhettoLagComp))*/
+					if (IsVisibleTo(client, target) || IsVisibleTo(client, target, true))
 					{
 						AcceptEntityInput(GetPlayerWeaponSlot(client, 4), "Kill");
 						new ent = CreateEntityByName(WeaponNames[wep]);
@@ -76,17 +63,21 @@ stock bool:IsVisibleTo(client, client2, bool:ghetto_lagcomp = false) // check an
 	GetClientAbsOrigin(client2, vEnt);
 	GetEntPropVector(client2, Prop_Data, "m_vecAbsVelocity", vClient2Velocity);
 
-	new Float:ping = GetClientAvgLatency(client, NetFlow_Incoming);
+	new Float:ping = GetClientAvgLatency(client, NetFlow_Outgoing);
+	new Float:lerp = GetEntPropFloat(client, Prop_Data, "m_fLerpTime");
+	lerp *= 4;
+	/* This number is pretty much pulled out of my ass with a little bit of testing on a local server with NF */
+	/* If you have a problem with this number, blame NF!!! */
 
 	if (ghetto_lagcomp)
 	{
-		vOrigin[0] += vClientVelocity[0] * ping * -1;
-		vOrigin[1] += vClientVelocity[1] * ping * -1;
-		vOrigin[2] += vClientVelocity[2] * ping * -1;
+		vOrigin[0] += vClientVelocity[0] * (ping + lerp) * -1;
+		vOrigin[1] += vClientVelocity[1] * (ping + lerp) * -1;
+		vOrigin[2] += vClientVelocity[2] * (ping + lerp) * -1;
 
-		vEnt[0] += vClient2Velocity[0] * ping * -1;
-		vEnt[1] += vClient2Velocity[1] * ping * -1;
-		vEnt[2] += vClient2Velocity[2] * ping * -1;
+		vEnt[0] += vClient2Velocity[0] * (ping) * -1;
+		vEnt[1] += vClient2Velocity[1] * (ping) * -1;
+		vEnt[2] += vClient2Velocity[2] * (ping) * -1;
 	}
 
 	MakeVectorFromPoints(vOrigin, vEnt, vLookAt); // compute vector from player to zombie
@@ -109,7 +100,6 @@ stock bool:IsVisibleTo(client, client2, bool:ghetto_lagcomp = false) // check an
 	}
 	else
 	{
-		PrintToChatAll("Didn't hit!");
 		isVisible = true;
 	}
 	CloseHandle(trace);
