@@ -75,7 +75,8 @@ stock SetNewRate(Float:rate = 0.0)
 
 stock Float:GetSurvivorTempHealth(client)
 {
-	return GetEntPropFloat(client, Prop_Send, "m_healthBuffer") - ((GetGameTime() - GetEntPropFloat(client, Prop_Send, "m_healthBufferTime")) * GetConVarFloat(FindConVar("pain_pills_decay_rate")));
+	new Float:tmp =  GetEntPropFloat(client, Prop_Send, "m_healthBuffer") - ((GetGameTime() - GetEntPropFloat(client, Prop_Send, "m_healthBufferTime")) * GetConVarFloat(FindConVar("pain_pills_decay_rate")));
+	return tmp > 0.0 ? tmp : 0.0;
 }
 
 stock SetSurvivorTempHealth(client, Float:newOverheal)
