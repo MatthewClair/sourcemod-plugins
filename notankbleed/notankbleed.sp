@@ -3,6 +3,8 @@
 #include <sourcemod>
 #include <l4d2util>
 
+#define MESSAGE_LENGTH 64
+
 public Plugin:myinfo =
 {
 	name = "No Tank Bleed",
@@ -32,7 +34,7 @@ public OnPluginEnd()
 	SetConVarFloat(pain_pills_decay_rate, defaultRate);
 }
 
-#if defined DEGUB
+#if defined DEBUG
 public Action:TempTest_Cmd(client, args)
 {
 	new Float:currentTemp = GetSurvivorTempHealth(client);
@@ -50,13 +52,22 @@ public RoundEnd_Event(Handle:event, const String:name[], bool:dontBroadcast)
 public OnTankSpawn(iTank)
 {
 	SetNewRate(0.0);
+#if defined DEBUG
+	InformAdmin("Tank spawned, rate: %f", GetConVarFloat(pain_pills_decay_rate));
+#endif
 }
 
 public OnTankDeath(iOldTank)
 {
+#if defined DEBUG
+	InformAdmin("Tank passed or died");
+#endif
 	if (NumTanksInPlay() <= 1) /* This is 1 when the last tank dies */
 	{
 		SetNewRate(defaultRate);
+#if defined DEBUG
+		InformAdmin("Last tank died, rate: %f", GetConVarFloat(pain_pills_decay_rate));
+#endif
 	}
 }
 
@@ -84,3 +95,23 @@ stock SetSurvivorTempHealth(client, Float:newOverheal)
 	SetEntPropFloat(client, Prop_Send, "m_healthBufferTime", GetGameTime());
 	SetEntPropFloat(client, Prop_Send, "m_healthBuffer", newOverheal);
 }
+
+public InformAdmin(const String:rawmessage[], any:...)
+{
+	decl String:message[MESSAGE_LENGTH];
+	VFormat(message, MESSAGE_LENGTH, rawmessage, 2);
+	new AdminId:id = INVALID_ADMIN_ID;
+	PrintToServer(message);
+	for (new i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i))
+		{
+			id = GetUserAdmin(i);
+			if (id != INVALID_ADMIN_ID)
+			{
+				PrintToConsole(i, message);
+				PrintToChat(i, message);
+			}
+		}
+	}
+}  
