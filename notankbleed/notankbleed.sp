@@ -1,16 +1,13 @@
 #pragma semicolon 1
 
 #include <sourcemod>
-#include <l4d2util>
-
-#define MESSAGE_LENGTH 64
 
 public Plugin:myinfo =
 {
 	name = "No Tank Bleed",
 	author = "CanadaRox",
 	description = "Stop temp health from decaying during a tank fight",
-	version = "2",
+	version = "3",
 	url = "https://github.com/CanadaRox/sourcemod-plugins/tree/master/notankbleed"
 };
 
@@ -27,6 +24,8 @@ public OnPluginStart()
 #endif
 
 	HookEvent("round_end", RoundEnd_Event, EventHookMode_PostNoCopy);
+	HookEvent("tank_spawn", TankSpawn_Event);
+	HookEvent("player_death", PlayerDeath_Event);
 }
 
 public OnPluginEnd()
@@ -49,25 +48,29 @@ public RoundEnd_Event(Handle:event, const String:name[], bool:dontBroadcast)
 	SetNewRate(defaultRate);
 }
 
-public OnTankSpawn(iTank)
+public TankSpawn_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	SetNewRate(0.0);
-#if defined DEBUG
-	InformAdmin("Tank spawned, rate: %f", GetConVarFloat(pain_pills_decay_rate));
-#endif
 }
 
-public OnTankDeath(iOldTank)
+public PlayerDeath_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
-#if defined DEBUG
-	InformAdmin("Tank passed or died");
-#endif
-	if (NumTanksInPlay() <= 1) /* This is 1 when the last tank dies */
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	if (client > 0 && client <= MaxClients && GetClientTeam(client) == 3 && GetZombieClass(client) == 8)
 	{
-		SetNewRate(defaultRate);
-#if defined DEBUG
-		InformAdmin("Last tank died, rate: %f", GetConVarFloat(pain_pills_decay_rate));
-#endif
+		new bool:foundTank = false;
+		for (new i = 1; i <= MaxClients; i++)
+		{
+			if (client != i && IsClientInGame(i) && GetClientTeam(i) == 3 && GetZombieClass(i) == 8)
+			{
+				foundTank = true;
+				break;
+			}
+		}
+		if (!foundTank)
+		{
+			SetNewRate(defaultRate);
+		}
 	}
 }
 
@@ -96,22 +99,4 @@ stock SetSurvivorTempHealth(client, Float:newOverheal)
 	SetEntPropFloat(client, Prop_Send, "m_healthBuffer", newOverheal);
 }
 
-public InformAdmin(const String:rawmessage[], any:...)
-{
-	decl String:message[MESSAGE_LENGTH];
-	VFormat(message, MESSAGE_LENGTH, rawmessage, 2);
-	new AdminId:id = INVALID_ADMIN_ID;
-	PrintToServer(message);
-	for (new i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientInGame(i))
-		{
-			id = GetUserAdmin(i);
-			if (id != INVALID_ADMIN_ID)
-			{
-				PrintToConsole(i, message);
-				PrintToChat(i, message);
-			}
-		}
-	}
-}  
+stock GetZombieClass(client) return GetEntProp(client, Prop_Send, "m_zombieClass");
