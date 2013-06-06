@@ -36,7 +36,7 @@ new bool:   bHasWiped[2];                   // true if they didn't get the bonus
 new bool:   bRoundOver[2];                  // whether the bonus will still change or not
 new         iStoreBonus[2];                 // what was the actual bonus?
 new         iStoreSurvivors[2];             // how many survived that round?
-new Float:  fMapDistance;
+new         iMapDistance;
 
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 {
@@ -103,7 +103,7 @@ public Native_GetRoundDamage(Handle:plugin, numParams)
 
 public OnMapStart()
 {
-	fMapDistance = L4D_GetVersusMaxCompletionScore();
+	iMapDistance = L4D_GetVersusMaxCompletionScore();
 	for (new i = 0; i < 2; i++)
 	{
 		iTotalDamage[i] = 0;
@@ -315,7 +315,7 @@ stock CalculateSurvivalBonus()
 	}
 	else
 	{
-		return RoundToFloor((MAX(GetConVarFloat(hMapMulti) * fMapDistance - GetDamage() * GetConVarFloat(hDamageMultiCvar), 0.0)) / 4 + GetConVarFloat(hStaticBonusCvar));
+		return RoundToFloor((MAX(GetConVarFloat(hMapMulti) * iMapDistance - GetDamage() * GetConVarFloat(hDamageMultiCvar), 0.0)) / 4 + GetConVarFloat(hStaticBonusCvar));
 	}
 }
 
