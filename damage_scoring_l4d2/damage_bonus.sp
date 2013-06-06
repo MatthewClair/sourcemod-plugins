@@ -255,27 +255,27 @@ stock StoreBonus()
 
 stock DisplayBonus(client=-1)
 {
-	new String:msgPartHdr[48];
-	new String:msgPartDmg[48];
+	decl String:msgPartHdr[48];
+	decl String:msgPartDmg[48];
 
 	for (new round = 0; round <= GameRules_GetProp("m_bInSecondHalfOfRound"); round++)
 	{
 		if (bRoundOver[round])
 		{
-			Format(msgPartHdr, sizeof(msgPartHdr), "Round \x05%i\x01 bonus", round+1);
+			FormatEx(msgPartHdr, sizeof(msgPartHdr), "Round \x05%i\x01 bonus", round+1);
 		}
 		else
 		{
-			Format(msgPartHdr, sizeof(msgPartHdr), "Current Bonus");
+			FormatEx(msgPartHdr, sizeof(msgPartHdr), "Current Bonus");
 		}
 
 		if (bHasWiped[round])
 		{
-			Format(msgPartDmg, sizeof(msgPartDmg), "\x03wipe\x01 (\x05%d\x01 damage)", iTotalDamage[round]);
+			FormatEx(msgPartDmg, sizeof(msgPartDmg), "\x03wipe\x01 (\x05%d\x01 damage)", iTotalDamage[round]);
 		}
 		else
 		{
-			Format(msgPartDmg, sizeof(msgPartDmg), "\x04%d\x01 (\x05%d\x01 damage)",
+			FormatEx(msgPartDmg, sizeof(msgPartDmg), "\x04%d\x01 (\x05%d\x01 damage)",
 					(bRoundOver[round]) ? iStoreBonus[round] : CalculateSurvivalBonus() * GetAliveSurvivors(),
 					iTotalDamage[round]);
 		}
