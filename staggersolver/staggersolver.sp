@@ -14,7 +14,14 @@ public Action:OnPlayerRunCmd(client, &buttons)
 {
 	if (IsClientInGame(client) && IsPlayerAlive(client) && GetEntPropFloat(client, Prop_Send, "m_staggerDist") > 0.0)
 	{
-		buttons = 0;
+		if (GetEdictFlags(client) & FL_ONGROUND)
+		{
+			buttons = 0;
+		}
+		else
+		{
+			SetEntPropFloat(client, Prop_Send, "m_staggerDist", 0.0);
+		}
 	}
 	return Plugin_Continue;
 }
