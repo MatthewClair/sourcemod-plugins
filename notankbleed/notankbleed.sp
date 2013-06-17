@@ -76,27 +76,35 @@ public PlayerDeath_Event(Handle:event, const String:name[], bool:dontBroadcast)
 
 stock SetNewRate(Float:rate = 0.0)
 {
+	decl Float:tempHealth;
 	for (new client = 1; client <= MaxClients; client++)
 	{
-		if(IsClientInGame(client) && GetClientTeam(client) == 2 && IsPlayerAlive(client))
+		if(IsClientInGame(client) && GetClientTeam(client) == 2 && IsPlayerAlive(client) && !IsPlayerIncap(client))
 		{
-			SetSurvivorTempHealth(client, GetSurvivorTempHealth(client));
+			tempHealth = GetSurvivorTempHealth(client);
+			if (tempHealth > 0.0)
+			{
+				SetSurvivorTempHealth(client, tempHealth);
+			}
 		}
 	}
 	SetConVarFloat(pain_pills_decay_rate, rate);
 }
 
-
 stock Float:GetSurvivorTempHealth(client)
 {
-	new Float:tmp =  GetEntPropFloat(client, Prop_Send, "m_healthBuffer") - ((GetGameTime() - GetEntPropFloat(client, Prop_Send, "m_healthBufferTime")) * GetConVarFloat(FindConVar("pain_pills_decay_rate")));
-	return tmp > 0.0 ? tmp : 0.0;
+	return GetEntPropFloat(client, Prop_Send, "m_healthBuffer") - ((GetGameTime() - GetEntPropFloat(client, Prop_Send, "m_healthBufferTime")) * GetConVarFloat(FindConVar("pain_pills_decay_rate")));
 }
 
 stock SetSurvivorTempHealth(client, Float:newOverheal)
 {
 	SetEntPropFloat(client, Prop_Send, "m_healthBufferTime", GetGameTime());
 	SetEntPropFloat(client, Prop_Send, "m_healthBuffer", newOverheal);
+}
+
+stock bool:IsPlayerIncap(client)
+{
+	return bool:GetEntProp(client, Prop_Send, "m_isIncapacitated");
 }
 
 stock GetZombieClass(client) return GetEntProp(client, Prop_Send, "m_zombieClass");
