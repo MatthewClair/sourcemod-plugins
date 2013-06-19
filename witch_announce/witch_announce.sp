@@ -104,34 +104,36 @@ public OnTakeDamage_Post(victim, attacker, inflictor, Float:damage, damagetype)
 	{
 		decl String:witch_key[10];
 		FormatEx(witch_key, sizeof(witch_key), "%x", victim);
-		decl witch_dmg_array[MaxClients+1];
-		if (!GetTrieArray(witchTrie, witch_key, witch_dmg_array, MaxClients+1))
+		decl witch_dmg_array[MAXPLAYERS+2]; /* index 0: infected damage, index MAXPLAYERS+1: witch health */
+		if (!GetTrieArray(witchTrie, witch_key, witch_dmg_array, MAXPLAYERS+2))
 		{
-			for (new i = 0; i <= MaxClients; i++)
+			for (new i = 0; i <= MAXPLAYERS; i++)
 			{
 				witch_dmg_array[i] = 0;
 			}
-			SetTrieArray(witchTrie, witch_key, witch_dmg_array, MaxClients+1, false);
+			witch_dmg_array[MAXPLAYERS+1] = GetConVarInt(z_witch_health);
+			SetTrieArray(witchTrie, witch_key, witch_dmg_array, MAXPLAYERS+2, false);
 		}
-		if (attacker > 0 && attacker <= MaxClients && IsClientInGame(attacker))
+		if (attacker > 0 && attacker <= MAXPLAYERS && IsClientInGame(attacker))
 		{
 			witch_dmg_array[GetClientTeam(attacker) == 3 ? 0 : attacker] += RoundToFloor(damage);
-			SetTrieArray(witchTrie, witch_key, witch_dmg_array, MaxClients+1, true);
+			witch_dmg_array[MAXPLAYERS+1] -= RoundToFloor(damage);
+			SetTrieArray(witchTrie, witch_key, witch_dmg_array, MAXPLAYERS+2, true);
 		}
 	}
 }
 
 PrintWitchDamageAndRemove(witch)
 {
-	decl witch_dmg_array[MaxClients+1];
+	decl witch_dmg_array[MAXPLAYERS+2];
 	new Handle:damage_array = CreateArray(2);
 	decl clientDamageEnum:current_client[clientDamageEnum];
 
 	decl String:witch_key[10];
 	FormatEx(witch_key, sizeof(witch_key), "%x", witch);
-	if (GetTrieArray(witchTrie, witch_key, witch_dmg_array, MaxClients+1))
+	if (GetTrieArray(witchTrie, witch_key, witch_dmg_array, MAXPLAYERS+2))
 	{
-		for (new client = 1; client <= MaxClients; client++)
+		for (new client = 1; client <= MAXPLAYERS; client++)
 		{
 			if (witch_dmg_array[client] > 0)
 			{
@@ -143,37 +145,30 @@ PrintWitchDamageAndRemove(witch)
 		SortADTArrayCustom(damage_array, sortFunc);
 		new array_size = GetArraySize(damage_array);
 		new witch_health = GetConVarInt(z_witch_health);
-		new witch_remaining_health = GetEntProp(witch, Prop_Send, "m_iHealth");
-		if (array_size > 0)
+		new witch_remaining_health = witch_dmg_array[MAXPLAYERS+1];
+		if (witch_remaining_health > 0)
 		{
-			if (witch_remaining_health > 0)
-			{
-				PrintToChatAll("\x01[SM] The witch had \x05%d\x01 [\x05%d%%\x01] health left!", witch_remaining_health, witch_remaining_health*100/witch_health);
-			}
-			else
-			{
-				PrintToChatAll("\x01[SM] The witch has been killed!");
-			}
-			for (new i = 0; i < array_size; i++)
-			{
-				GetArrayArray(damage_array, i, current_client);
-				if (IsClientInGame(current_client[CDE_client]))
-				{
-					PrintToChatAll("\x03%N: \x05%d\x01 [\x05%d%%\x01]", current_client[CDE_client], current_client[CDE_damage], current_client[CDE_damage]*100/witch_health);
-				}
-				else
-				{
-					PrintToChatAll("\x03Unknown: \x05%d\x01 [\x05%d%%\x01]", current_client[CDE_damage], current_client[CDE_damage]*100/witch_health);
-				}
-			}
-			if (witch_dmg_array[0])
-			{
-				PrintToChatAll("\x03Infected: \x05%d\x01 [\x05%d%%\x01]", witch_dmg_array[0], witch_dmg_array[0]*100/witch_health);
-			}
+			PrintToChatAll("\x01[SM] The witch had \x05%d\x01 [\x05%d%%\x01] health left!", witch_remaining_health, witch_remaining_health*100/witch_health);
 		}
 		else
 		{
-			PrintToChatAll("\x01[SM] A witch was smote by the hand of GOD!");
+			PrintToChatAll("\x01[SM] The witch has been killed!");
+		}
+		for (new i = 0; i < array_size; i++)
+		{
+			GetArrayArray(damage_array, i, current_client);
+			if (IsClientInGame(current_client[CDE_client]))
+			{
+				PrintToChatAll("\x03%N: \x05%d\x01 [\x05%d%%\x01]", current_client[CDE_client], current_client[CDE_damage], current_client[CDE_damage]*100/witch_health);
+			}
+			else
+			{
+				PrintToChatAll("\x03Unknown: \x05%d\x01 [\x05%d%%\x01]", current_client[CDE_damage], current_client[CDE_damage]*100/witch_health);
+			}
+		}
+		if (witch_dmg_array[0])
+		{
+			PrintToChatAll("\x03Infected: \x05%d\x01 [\x05%d%%\x01]", witch_dmg_array[0], witch_dmg_array[0]*100/witch_health);
 		}
 	}
 	SDKUnhook(witch, SDKHook_OnTakeDamagePost, OnTakeDamage_Post);
