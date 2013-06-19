@@ -12,6 +12,13 @@ public Plugin:myinfo =
 	url = ""
 };
 
+enum clientDamageEnum
+{
+	CDE_client,
+	CDE_damage
+};
+
+new Handle:z_witch_health;
 new Handle:witchTrie;
 new bool:g_bLateLoad;
 
@@ -26,6 +33,8 @@ public OnPluginStart()
 
 	HookEvent("witch_spawn", WitchSpawn_Event);
 	HookEvent("witch_killed", WitchKilled_Event);
+
+	z_witch_health = FindConVar("z_witch_health");
 
 	if (g_bLateLoad)
 	{
@@ -115,6 +124,8 @@ public OnTakeDamage_Post(victim, attacker, inflictor, Float:damage, damagetype)
 PrintWitchDamageAndRemove(witch)
 {
 	decl witch_dmg_array[MaxClients+1];
+	new Handle:damage_array = CreateArray(2);
+	decl clientDamageEnum:current_client[clientDamageEnum];
 
 	decl String:witch_key[10];
 	FormatEx(witch_key, sizeof(witch_key), "%x", witch);
@@ -124,23 +135,66 @@ PrintWitchDamageAndRemove(witch)
 		{
 			if (witch_dmg_array[client] > 0)
 			{
-				if(IsClientInGame(client))
+				current_client[CDE_client] = client;
+				current_client[CDE_damage] = witch_dmg_array[client];
+				PushArrayArray(damage_array, current_client[0]);
+			}
+		}
+		SortADTArrayCustom(damage_array, sortFunc);
+		new array_size = GetArraySize(damage_array);
+		new witch_health = GetConVarInt(z_witch_health);
+		new witch_remaining_health = GetEntProp(witch, Prop_Send, "m_iHealth");
+		if (array_size > 0)
+		{
+			if (witch_remaining_health > 0)
+			{
+				PrintToChatAll("\x01[SM] The witch had \x05%d\x01 [\x05%d%%\x01] health left!", witch_remaining_health, witch_remaining_health*100/witch_health);
+			}
+			else
+			{
+				PrintToChatAll("\x01[SM] The witch has been killed!");
+			}
+			for (new i = 0; i < array_size; i++)
+			{
+				GetArrayArray(damage_array, i, current_client);
+				if (IsClientInGame(current_client[CDE_client]))
 				{
-					PrintToChatAll("%N: %d", client, witch_dmg_array[client]);
+					PrintToChatAll("\x03%N: \x05%d\x01 [\x05%d%%\x01]", current_client[CDE_client], current_client[CDE_damage], current_client[CDE_damage]*100/witch_health);
 				}
 				else
 				{
-					PrintToChatAll("Unknown: %d", client, witch_dmg_array[client]);
+					PrintToChatAll("\x03Unknown: \x05%d\x01 [\x05%d%%\x01]", current_client[CDE_damage], current_client[CDE_damage]*100/witch_health);
 				}
 			}
+			if (witch_dmg_array[0])
+			{
+				PrintToChatAll("\x03Infected: \x05%d\x01 [\x05%d%%\x01]", witch_dmg_array[0], witch_dmg_array[0]*100/witch_health);
+			}
 		}
-		if (witch_dmg_array[0])
+		else
 		{
-			PrintToChatAll("Infected: %d", witch_dmg_array[0]);
+			PrintToChatAll("\x01[SM] A witch was smote by the hand of GOD!");
 		}
 	}
 	SDKUnhook(witch, SDKHook_OnTakeDamagePost, OnTakeDamage_Post);
 	RemoveFromTrie(witchTrie, witch_key);
+	ClearArray(damage_array);
+}
+
+public sortFunc(index1, index2, Handle:array, Handle:hndl)
+{
+	decl item1[2];
+	GetArrayArray(array, index1, item1, 2);
+
+	decl item2[2];
+	GetArrayArray(array, index2, item2, 2);
+
+	if (item1[1] > item2[1])
+		return -1;
+	else if (item1[1] < item2[1])
+		return 1;
+	else
+		return 0;
 }
 
 stock bool:IsPlayerIncap(client) return bool:GetEntProp(client, Prop_Send, "m_isIncapacitated");
