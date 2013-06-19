@@ -104,8 +104,11 @@ public OnTakeDamage_Post(victim, attacker, inflictor, Float:damage, damagetype)
 			}
 			SetTrieArray(witchTrie, witch_key, witch_dmg_array, MaxClients+1, false);
 		}
-		witch_dmg_array[GetClientTeam(attacker) == 3 ? 0 : attacker] += RoundToFloor(damage);
-		SetTrieArray(witchTrie, witch_key, witch_dmg_array, MaxClients+1, true);
+		if (attacker > 0 && attacker <= MaxClients && IsClientInGame(attacker))
+		{
+			witch_dmg_array[GetClientTeam(attacker) == 3 ? 0 : attacker] += RoundToFloor(damage);
+			SetTrieArray(witchTrie, witch_key, witch_dmg_array, MaxClients+1, true);
+		}
 	}
 }
 
