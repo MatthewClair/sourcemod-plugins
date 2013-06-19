@@ -100,27 +100,13 @@ public OnTakeDamage_Post(victim, attacker, inflictor, Float:damage, damagetype)
 		{
 			for (new i = 0; i <= MaxClients; i++)
 			{
-				if (i == attacker)
-				{
-					witch_dmg_array[i] = RoundToFloor(damage);
-				}
-				else
-				{
-					witch_dmg_array[i] = 0;
-				}
+				witch_dmg_array[i] = 0;
 			}
-			if (!SetTrieArray(witchTrie, witch_key, witch_dmg_array, MaxClients+1, false))
-			{
-				return;
-			}
+			SetTrieArray(witchTrie, witch_key, witch_dmg_array, MaxClients+1, false);
 		}
-		else
-		{
-			witch_dmg_array[attacker] += RoundToFloor(damage);
-			SetTrieArray(witchTrie, witch_key, witch_dmg_array, MaxClients+1, true);
-		}
+		witch_dmg_array[GetClientTeam(attacker) == 3 ? 0 : attacker] += RoundToFloor(damage);
+		SetTrieArray(witchTrie, witch_key, witch_dmg_array, MaxClients+1, true);
 	}
-	return;
 }
 
 PrintWitchDamageAndRemove(witch)
@@ -144,6 +130,10 @@ PrintWitchDamageAndRemove(witch)
 					PrintToChatAll("Unknown: %d", client, witch_dmg_array[client]);
 				}
 			}
+		}
+		if (witch_dmg_array[0])
+		{
+			PrintToChatAll("Infected: %d", witch_dmg_array[0]);
 		}
 	}
 	SDKUnhook(witch, SDKHook_OnTakeDamagePost, OnTakeDamage_Post);
