@@ -78,11 +78,16 @@ public PlayerDeath_Event(Handle:event, const String:name[], bool:dontBroadcast)
 
 stock SetNewRate(Float:rate = REALLY_SMALL_FLOAT)
 {
+	decl Float:tempHealth;
 	for (new client = 1; client <= MaxClients; client++)
 	{
 		if(IsClientInGame(client) && GetClientTeam(client) == 2 && IsPlayerAlive(client) && !IsPlayerIncap(client))
 		{
-			SetSurvivorTempHealth(client, GetSurvivorTempHealth(client));
+			tempHealth = GetSurvivorTempHealth(client);
+			if (tempHealth > 0.0)
+			{
+				SetSurvivorTempHealth(client, tempHealth);
+			}
 		}
 	}
 	SetConVarFloat(pain_pills_decay_rate, rate);
