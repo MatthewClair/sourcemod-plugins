@@ -12,7 +12,7 @@ public Plugin:myinfo =
 	name = "Damage Scoring",
 	author = "CanadaRox, Stabby",
 	description = "Custom damage scoring based on damage and a static bonus.  (It sounds as bad as vanilla but its not!!)",
-	version = "0.9999",
+	version = "0.99999",
 	url = "https://github.com/CanadaRox/sourcemod-plugins"
 };
 
@@ -36,7 +36,6 @@ new bool:   bHasWiped[2];                   // true if they didn't get the bonus
 new bool:   bRoundOver[2];                  // whether the bonus will still change or not
 new         iStoreBonus[2];                 // what was the actual bonus?
 new         iStoreSurvivors[2];             // how many survived that round?
-new         iMapDistance;
 
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 {
@@ -103,7 +102,6 @@ public Native_GetRoundDamage(Handle:plugin, numParams)
 
 public OnMapStart()
 {
-	iMapDistance = L4D_GetVersusMaxCompletionScore();
 	for (new i = 0; i < 2; i++)
 	{
 		iTotalDamage[i] = 0;
@@ -262,7 +260,7 @@ stock DisplayBonus(client=-1)
 	{
 		if (bRoundOver[round])
 		{
-			FormatEx(msgPartHdr, sizeof(msgPartHdr), "Round \x05%i\x01 bonus", round+1);
+			FormatEx(msgPartHdr, sizeof(msgPartHdr), "Round \x05%i\x01 Bonus", round+1);
 		}
 		else
 		{
@@ -282,14 +280,17 @@ stock DisplayBonus(client=-1)
 
 		if (client == -1)
 		{
+			PrintToChatAll("Map Distance: \x05%d\x01", L4D_GetVersusMaxCompletionScore());
 			PrintToChatAll("\x01%s: %s", msgPartHdr, msgPartDmg);
 		}
 		else if (client)
 		{
+			PrintToChat(client, "Map Distance: \x05%d\x01", L4D_GetVersusMaxCompletionScore());
 			PrintToChat(client, "\x01%s: %s", msgPartHdr, msgPartDmg);
 		}
 		else
 		{
+			PrintToServer("Map Distance: \x05%d\x01", L4D_GetVersusMaxCompletionScore());
 			PrintToServer("\x01%s: %s", msgPartHdr, msgPartDmg);
 		}
 	}
@@ -315,7 +316,7 @@ stock CalculateSurvivalBonus()
 	}
 	else
 	{
-		return RoundToFloor((MAX(GetConVarFloat(hMapMulti) * iMapDistance - GetDamage() * GetConVarFloat(hDamageMultiCvar), 0.0)) / 4 + GetConVarFloat(hStaticBonusCvar));
+		return RoundToFloor((MAX(GetConVarFloat(hMapMulti) * L4D_GetVersusMaxCompletionScore() - GetDamage() * GetConVarFloat(hDamageMultiCvar), 0.0)) / 4 + GetConVarFloat(hStaticBonusCvar));
 	}
 }
 
