@@ -18,15 +18,14 @@ public OnPluginStart()
 				"Display boss percentages to entire team when using commands",
 				FCVAR_PLUGIN);
 
-	RegConsoleCmd("sm_boss", BossCmd);
-	RegConsoleCmd("sm_tank", BossCmd);
-	RegConsoleCmd("sm_witch", BossCmd);
+	RegConsoleCmd("sm_cur", CurrentCmd);
+	RegConsoleCmd("sm_current", CurrentCmd);
 
 	survivor_limit = FindConVar("survivor_limit");
 	z_max_player_zombies = FindConVar("z_max_player_zombies");
 }
 
-public Action:BossCmd(client, args)
+public Action:CurrentCmd(client, args)
 {
 	new L4D2_Team:team = L4D2_Team:GetClientTeam(client);
 	if (team == L4D2Team_Spectator)
