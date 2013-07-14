@@ -2,6 +2,8 @@
 #include <sdkhooks>
 #include <sdktools>
 #include <left4downtown>
+#undef REQUIRE_PLUGIN
+#include <readyup>
 
 #define MAX(%0,%1) (((%0) > (%1)) ? (%0) : (%1))
 
@@ -37,12 +39,16 @@ new bool:   bRoundOver[2];                  // whether the bonus will still chan
 new         iStoreBonus[2];                 // what was the actual bonus?
 new         iStoreSurvivors[2];             // how many survived that round?
 
+new bool:   readyUpIsAvailable;
+
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 {
 	CreateNative("DamageBonus_GetCurrentBonus", Native_GetCurrentBonus);
 	CreateNative("DamageBonus_GetRoundBonus", Native_GetRoundBonus);
 	CreateNative("DamageBonus_GetRoundDamage", Native_GetRoundDamage);
 	RegPluginLibrary("l4d2_damagebonus");
+
+	MarkNativeAsOptional("IsInReady");
 	return APLRes_Success;
 }
 
@@ -83,6 +89,21 @@ public OnPluginEnd()
 {
 	SetConVarInt(hSurvivalBonusCvar, iSurvivalBonusDefault);
 	SetConVarInt(hTieBreakBonusCvar, iTieBreakBonusDefault);
+}
+
+public OnAllPluginsLoaded()
+{
+	readyUpIsAvailable = LibraryExists("readyup");
+}
+
+public OnLibraryRemoved(const String:name[])
+{
+	if (StrEqual(name, "readyup")) readyUpIsAvailable = false;
+}
+
+public OnLibraryAdded(const String:name[])
+{
+	if (StrEqual(name, "readyup")) readyUpIsAvailable = true;
 }
 
 public Native_GetCurrentBonus(Handle:plugin, numParams)
@@ -144,6 +165,18 @@ public RoundEnd_Event(Handle:event, const String:name[], bool:dontBroadcast)
 	if (reason == 5)
 	{
 		DisplayBonus();
+		if (readyUpIsAvailable && bRoundOver[0] && !GameRules_GetProp("m_bInSecondHalfOfRound"))
+		{
+			decl String:readyMsgBuff[65];
+			if (bHasWiped[0])
+			{
+				FormatEx(readyMsgBuff, sizeof(readyMsgBuff), "Round 1: Wipe (%d damage)", iTotalDamage[0]);
+			}
+			else
+			{
+				FormatEx(readyMsgBuff, sizeof(readyMsgBuff), "Round 1: %d (%d damage)", iStoreBonus[0], iTotalDamage[0]);
+			}
+		}
 	}
 }
 
@@ -190,8 +223,8 @@ public OnTakeDamage(victim, attacker, inflictor, Float:damage, damagetype)
 public PlayerLedgeGrab_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	new health = GetEntData(client, 14804, 4);
-	new temphealth = GetEntData(client, 14808, 4);
+	new health = L4D2Direct_GetPreIncapHealth(client);
+	new temphealth = L4D2Direct_GetPreIncapHealthBuffer(client);
 
 	iTotalDamage[GameRules_GetProp("m_bInSecondHalfOfRound")] += health + temphealth;
 }
