@@ -62,6 +62,12 @@ public WitchSpawn_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new witch = GetEventInt(event, "witchid");
 	SDKHook(witch, SDKHook_OnTakeDamagePost, OnTakeDamage_Post);
+
+	new witch_dmg_array[MAXPLAYERS+2];
+	decl String:witch_key[10];
+	FormatEx(witch_key, sizeof(witch_key), "%x", witch);
+	witch_dmg_array[MAXPLAYERS+1] = GetConVarInt(z_witch_health);
+	SetTrieArray(witchTrie, witch_key, witch_dmg_array, MAXPLAYERS+2, false);
 }
 
 public WitchKilled_Event(Handle:event, const String:name[], bool:dontBroadcast)
