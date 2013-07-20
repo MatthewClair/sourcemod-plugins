@@ -23,6 +23,18 @@ public OnPluginStart()
 	RegConsoleCmd("sm_increase_specspeed", IncreaseSpecspeed_Cmd);
 	RegConsoleCmd("sm_decrease_specspeed", DecreaseSpecspeed_Cmd);
 	RegConsoleCmd("sm_set_vertical_increment", SetVerticalIncrement_Cmd);
+
+	HookEvent("player_team", PlayerTeam_Event);
+}
+
+public PlayerTeam_Event(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	new team = GetEventInt(event, "team");
+	if (team == 1)
+	{
+		new client = GetClientOfUserId(GetEventInt(event, "userid"));
+		SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", currentMulti[client]);
+	}
 }
 
 public OnClientAuthorized(client, const String:auth[])
@@ -64,6 +76,7 @@ public Action:SetSpecspeed_Cmd(client, args)
 	GetCmdArg(1, buffer, sizeof(buffer));
 	new Float:newVal = StringToFloat(buffer);
 	SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", newVal);
+	currentMulti[client] = newVal;
 	return Plugin_Handled;
 }
 
@@ -111,6 +124,7 @@ stock IncreaseSpecspeed(client, Float:difference)
 {
 	new Float:curVal = GetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue");
 	SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", curVal + difference);
+	currentMulti[client] = curVal + difference;
 }
 
 public Action:SetVerticalIncrement_Cmd(client, args)
