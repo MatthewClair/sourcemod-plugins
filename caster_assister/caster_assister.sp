@@ -50,6 +50,11 @@ public OnClientDisconnect(client)
 
 public Action:SetSpecspeed_Cmd(client, args)
 {
+	if (GetClientTeam(client) != 1)
+	{
+		return Plugin_Handled;
+	}
+
 	if (args != 1)
 	{
 		ReplyToCommand(client, "Usage: sm_set_specspeed_multi # (default: 1.0)");
@@ -64,6 +69,11 @@ public Action:SetSpecspeed_Cmd(client, args)
 
 public Action:SetSpecspeedIncrement_Cmd(client, args)
 {
+	if (GetClientTeam(client) != 1)
+	{
+		return Plugin_Handled;
+	}
+
 	if (args != 1)
 	{
 		ReplyToCommand(client, "Usage: sm_set_specspeed_increment # (default: 0.1)");
@@ -77,12 +87,22 @@ public Action:SetSpecspeedIncrement_Cmd(client, args)
 
 public Action:IncreaseSpecspeed_Cmd(client, args)
 {
+	if (GetClientTeam(client) != 1)
+	{
+		return Plugin_Handled;
+	}
+
 	IncreaseSpecspeed(client, currentIncrement[client]);
 	return Plugin_Handled;
 }
 
 public Action:DecreaseSpecspeed_Cmd(client, args)
 {
+	if (GetClientTeam(client) != 1)
+	{
+		return Plugin_Handled;
+	}
+
 	IncreaseSpecspeed(client, -currentIncrement[client]);
 	return Plugin_Handled;
 }
@@ -95,6 +115,11 @@ stock IncreaseSpecspeed(client, Float:difference)
 
 public Action:SetVerticalIncrement_Cmd(client, args)
 {
+	if (GetClientTeam(client) != 1)
+	{
+		return Plugin_Handled;
+	}
+
 	if (args != 1)
 	{
 		ReplyToCommand(client, "Usage: sm_set_vertical_increment # (default: 10.0)");
