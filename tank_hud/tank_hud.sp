@@ -24,10 +24,10 @@ public Round_Event(Handle:event, const String:name[], bool:dontBroadcast)
 
 public TankSpawn_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
+	tankClient = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (!isTankActive)
 	{
 		isTankActive = true;
-		tankClient = GetClientOfUserId(GetEventInt(event, "userid"));
 		CreateTimer(0.1, MenuRefresh_Timer, _, TIMER_REPEAT);
 		UpdatePanel();
 	}
@@ -63,25 +63,28 @@ public Action:MenuRefresh_Timer(Handle:timer)
 		UpdatePanel();
 		return Plugin_Continue;
 	}
-	return Plugin_Handled;
+	return Plugin_Stop;
 }
 
 UpdatePanel()
 {
-	static Handle:menuPanel = INVALID_HANDLE;
-	if (menuPanel != INVALID_HANDLE)
+	if (isTankActive)
 	{
-		CloseHandle(menuPanel);
-		menuPanel = INVALID_HANDLE;
+		static Handle:menuPanel = INVALID_HANDLE;
+		if (menuPanel != INVALID_HANDLE)
+		{
+			CloseHandle(menuPanel);
+			menuPanel = INVALID_HANDLE;
+		}
+
+		menuPanel = CreatePanel();
+
+		decl String:tankRage[24];
+		Format(tankRage, sizeof(tankRage), "Rage: %d%%\nPass: #%d",
+				GetTankFrustration(tankClient), L4D2Direct_GetTankPassedCount());
+		DrawPanelText(menuPanel, tankRage);
+		SendPanelToClient(menuPanel, tankClient, DummyHandler, 1);
 	}
-
-	menuPanel = CreatePanel();
-
-	decl String:tankRage[24];
-	Format(tankRage, sizeof(tankRage), "Rage: %d%%\nPass: #%d",
-			GetTankFrustration(tankClient), L4D2Direct_GetTankPassedCount()+1);
-	DrawPanelText(menuPanel, tankRage);
-	SendPanelToClient(menuPanel, tankClient, DummyHandler, 1);
 }
 
 stock GetZombieClass(client) return GetEntProp(client, Prop_Send, "m_zombieClass");
