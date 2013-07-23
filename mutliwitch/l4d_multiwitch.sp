@@ -150,10 +150,10 @@ public Action:WitchSpawn_Timer(Handle:timer)
 		{
 			if (IsClientInGame(i))
 			{
-				new flags = GetCommandFlags("z_spawn");
-				SetCommandFlags("z_spawn", flags ^ FCVAR_CHEAT);
-				FakeClientCommand(i, "z_spawn witch auto");
-				SetCommandFlags("z_spawn", flags);
+				new flags = GetCommandFlags("z_spawn_old");
+				SetCommandFlags("z_spawn_old", flags ^ FCVAR_CHEAT);
+				FakeClientCommand(i, "z_spawn_old witch auto");
+				SetCommandFlags("z_spawn_old", flags);
 				return Plugin_Continue;
 			}
 		}
@@ -227,13 +227,13 @@ public Action:WitchRespawn_Timer(Handle:timer)
 			{
 				if(IsClientInGame(client))
 				{
-					new flags = GetCommandFlags("z_spawn");
-					SetCommandFlags("z_spawn", flags ^ FCVAR_CHEAT);
+					new flags = GetCommandFlags("z_spawn_old");
+					SetCommandFlags("z_spawn_old", flags ^ FCVAR_CHEAT);
 					for (new i = 0; i < witchSpawnCount; i++)
 					{
-						FakeClientCommand(client, "z_spawn witch auto");
+						FakeClientCommand(client, "z_spawn_old witch auto");
 					}
-					SetCommandFlags("z_spawn", flags);
+					SetCommandFlags("z_spawn_old", flags);
 					break;
 				}
 			}
