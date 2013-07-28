@@ -33,7 +33,7 @@ public OnPluginStart()
 		{
 			if (IsClientInGame(client))
 			{
-				OnClientConnected(client);
+				OnClientPutInServer(client);
 			}
 		}
 	}
@@ -41,7 +41,7 @@ public OnPluginStart()
 	pain_pills_decay_rate = FindConVar("pain_pills_decay_rate");
 }
 
-public OnClientConnected(client)
+public OnClientPutInServer(client)
 {
 	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 	SDKHook(client, SDKHook_OnTakeDamagePost, OnTakeDamagePost);
