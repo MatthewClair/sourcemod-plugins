@@ -2,6 +2,7 @@
 #include <sdkhooks>
 #include <sdktools>
 #include <left4downtown>
+#include <l4d2_direct>
 #undef REQUIRE_PLUGIN
 #include <readyup>
 
