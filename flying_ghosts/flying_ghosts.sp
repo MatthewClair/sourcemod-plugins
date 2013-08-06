@@ -45,7 +45,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3],
 					SetEntityMoveType(client, MOVETYPE_NOCLIP);
 					bBlockSpawn[client] = true;
 					hGroundCheckTimer[client] = CreateTimer(GROUND_CHECK_DELAY,
-							GroundCheck_Timer, client, TIMER_REPEAT |
+							GroundCheck_Timer, GetClientUserId(client), TIMER_REPEAT |
 							TIMER_FLAG_NO_MAPCHANGE);
 				}
 				else
@@ -65,10 +65,10 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3],
 	}
 }
 
-public Action:GroundCheck_Timer(Handle:timer, any:client)
+public Action:GroundCheck_Timer(Handle:timer, any:userid)
 {
-	new clientFlags = GetEntityFlags(client)
-	if (clientFlags & FL_ONGROUND)
+	new client = GetClientOfUserId(userid);
+	if (client == 0 || GetEntityFlags(client) & FL_ONGROUND)
 	{
 		bBlockSpawn[client] = false;
 		hGroundCheckTimer[client] = INVALID_HANDLE;
