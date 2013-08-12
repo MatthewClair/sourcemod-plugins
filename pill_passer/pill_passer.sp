@@ -12,7 +12,7 @@ public Plugin:myinfo =
 	name = "Easier Pill Passer",
 	author = "CanadaRox",
 	description = "Lets players pass pills and adrenaline with +reload when they are holding one of those items",
-	version = "2",
+	version = "3",
 	url = "http://github.com/CanadaRox/sourcemod-plugins/"
 };
 
@@ -35,14 +35,19 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 				GetClientAbsOrigin(target, targetOrigin);
 				if (GetVectorDistance(clientOrigin, targetOrigin, true) < MAX_DIST_SQUARED)
 				{
-					/*if ((IsVisibleTo(client, target) && !bGhettoLagComp)*/
-							/*|| (IsVisibleTo(client, target, true) && bGhettoLagComp))*/
 					if (IsVisibleTo(client, target) || IsVisibleTo(client, target, true))
 					{
 						AcceptEntityInput(GetPlayerWeaponSlot(client, 4), "Kill");
 						new ent = CreateEntityByName(WeaponNames[wep]);
 						DispatchSpawn(ent);
 						EquipPlayerWeapon(target, ent);
+
+						new Handle:hFakeEvent = CreateEvent("weapon_given");
+						SetEventInt(hFakeEvent, "userid", GetClientUserId(target));
+						SetEventInt(hFakeEvent, "giver", GetClientUserId(client));
+						SetEventInt(hFakeEvent, "weapon", _:wep);
+						SetEventInt(hFakeEvent, "weaponentid", ent);
+						FireEvent(hFakeEvent);
 					}
 				}
 			}
