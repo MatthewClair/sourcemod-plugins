@@ -2,7 +2,11 @@
 
 #include <sourcemod>
 #include <sdktools>
+
+#define LEFT4DEAD_VERSION 2
+#if LEFT4DEAD_VERSION == 2
 #include <weapons>
+#endif
 
 #define TEAM_SURVIVOR 2
 #define MAX_DIST_SQUARED 48400 /* Normal pill pass range is ~220 units */
@@ -23,11 +27,14 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 	{
 		decl String:weapon_name[64];
 		GetClientWeapon(client, weapon_name, sizeof(weapon_name));
-		/* L4D2 specific stuff here */
+#if LEFT4DEAD_VERSION == 1
+		if (StrEqual(weapon_name[7], "pain_pills"))
+		{
+#else
 		new WeaponId:wep = WeaponNameToId(weapon_name);
 		if (wep == WEPID_PAIN_PILLS || wep == WEPID_ADRENALINE)
 		{
-			/* end of L4D2 specific stuff */
+#endif
 			new target = GetClientAimTarget(client);
 			if (target != -1 && GetClientTeam(target) == TEAM_SURVIVOR && GetPlayerWeaponSlot(target, 4) == -1 && !IsPlayerIncap(target))
 			{
@@ -39,16 +46,24 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 					if (IsVisibleTo(client, target) || IsVisibleTo(client, target, true))
 					{
 						AcceptEntityInput(GetPlayerWeaponSlot(client, 4), "Kill");
+#if LEFT4DEAD_VERSION == 1
+						new ent = CreateEntityByName("weapon_pain_pills");
+#else
 						new ent = CreateEntityByName(WeaponNames[wep]);
+#endif
+
 						DispatchSpawn(ent);
 						EquipPlayerWeapon(target, ent);
 
+/* Someone has to tell me the L4D1 weapon id for weapon_pain_pills and I can add this */
+#if LEFT4DEAD_VERSION == 2
 						new Handle:hFakeEvent = CreateEvent("weapon_given");
 						SetEventInt(hFakeEvent, "userid", GetClientUserId(target));
 						SetEventInt(hFakeEvent, "giver", GetClientUserId(client));
 						SetEventInt(hFakeEvent, "weapon", _:wep);
 						SetEventInt(hFakeEvent, "weaponentid", ent);
 						FireEvent(hFakeEvent);
+#endif
 					}
 				}
 			}
