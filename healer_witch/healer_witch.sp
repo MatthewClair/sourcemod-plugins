@@ -34,7 +34,7 @@ public OnPluginStart()
 public WitchKilled_Event(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (GetClientTeam(client) == 2 && IsPlayerAlive(client) && !IsPlayerIncap(client))
+	if (client > 0 && client <= MaxClients && IsClientInGame(client) && GetClientTeam(client) == 2 && IsPlayerAlive(client) && !IsPlayerIncap(client))
 	{
 		IncreaseHealth(client);
 	}
