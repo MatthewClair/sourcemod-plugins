@@ -6,11 +6,13 @@ const AI_THROW_RANGE=17001;
 
 new Float:fDefaultThrowRange;
 new Handle:hTankGodTime;
+new Handle:tank_throw_allow_range;
 
 public OnPluginStart()
 {
 	hTankGodTime = CreateConVar("l4d_tank_god_time", "3.0", "Time that a tank will have god mode and fire immunity after the first player tanks control");
-	fDefaultThrowRange = GetConVarFloat(FindConVar("tank_throw_allow_range"));
+	tank_throw_allow_range = FindConVar("tank_throw_allow_range");
+	fDefaultThrowRange = GetConVarFloat(tank_throw_allow_range);
 }
 
 public L4D2_OnTankFirstSpawn(tankClient)
@@ -39,7 +41,7 @@ public L4D2_OnTankPassControl(oldTank, newTank, passCount)
 
 stock FreezeTank(tank)
 {
-	SetConVarInt(FindConVar("tank_throw_allow_range"), AI_THROW_RANGE);
+	SetConVarInt(tank_throw_allow_range, AI_THROW_RANGE);
 	if (IsValidEntity(tank))
 	{
 		SetEntityMoveType(tank, MOVETYPE_NONE);
@@ -49,7 +51,7 @@ stock FreezeTank(tank)
 
 stock ThawTank(tank)
 {
-	SetConVarFloat(FindConVar("tank_throw_allow_range"), fDefaultThrowRange);
+	SetConVarFloat(tank_throw_allow_range, fDefaultThrowRange);
 	if (IsValidEntity(tank))
 	{
 		SetEntityMoveType(tank, MOVETYPE_CUSTOM);
@@ -60,7 +62,7 @@ stock ThawTank(tank)
 public Action:UnlockAI_Timer(Handle:timer, any:tank)
 {
 	new client = GetClientOfUserId(tank);
-	if (IsClientConnected(client) && IsPlayerAlive(client) && IsFakeClient(client))
+	if (client > 0 && IsClientConnected(client) && IsPlayerAlive(client) && IsFakeClient(client))
 	{
 		ThawTank(client);
 	}
