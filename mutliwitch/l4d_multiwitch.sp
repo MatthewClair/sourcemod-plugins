@@ -146,7 +146,7 @@ public Action:WitchSpawn_Timer(Handle:timer)
 			&& ((pauseIsAvailable && !IsInPause()) || !pauseIsAvailable)
 			&& ((readyUpIsAvailable && !IsInReady()) || !readyUpIsAvailable))
 	{
-		for (new i = 1; i < MaxClients; i++)
+		for (new i = 1; i <= MaxClients; i++)
 		{
 			if (IsClientInGame(i))
 			{

@@ -154,7 +154,7 @@ public Action:BossCmd(client, args)
 
 	if (GetConVarBool(hCvarPrintToEveryone))
 	{
-		for (new i = 1; i < MaxClients+1; i++)
+		for (new i = 1; i <= MaxClients; i++)
 		{
 			if (IsClientConnected(i) && IsClientInGame(i) && L4D2_Team:GetClientTeam(i) == iTeam)
 			{

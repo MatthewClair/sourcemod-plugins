@@ -29,7 +29,7 @@ public OnPluginStart()
 {
 	if (isLateLoad)
 	{
-		for (new client = 1; client < MaxClients + 1; client++)
+		for (new client = 1; client <= MaxClients; client++)
 		{
 			if (IsClientInGame(client))
 			{

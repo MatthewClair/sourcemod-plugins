@@ -146,12 +146,12 @@ stock bool:IsVisibleToSurvivors(entity)
 {
 	new iSurv;
 
-	for (new i = 1; i < MaxClients && iSurv < 4; i++)
+	for (new i = 1; i <= MaxClients && iSurv < 4; i++)
 	{
 		if (IsClientInGame(i) && GetClientTeam(i) == SURVIVOR_TEAM)
 		{
 			iSurv++
-			if (IsPlayerAlive(i) && IsVisibleTo(i, entity)) 
+			if (IsPlayerAlive(i) && IsVisibleTo(i, entity))
 			{
 				return true;
 			}

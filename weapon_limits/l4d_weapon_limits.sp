@@ -200,7 +200,7 @@ stock GetWeaponCount(const mask[])
 {
 	new count;
 	decl WeaponId:wepid, j;
-	for (new i = 1; i < MaxClients + 1; ++i)
+	for (new i = 1; i <= MaxClients; ++i)
 	{
 		if (IsClientInGame(i) && GetClientTeam(i) == 2 && IsPlayerAlive(i))
 		{
@@ -231,7 +231,7 @@ stock CloseLimits()
 
 stock GiveDefaultAmmo(client)
 {
-	if (iAmmoPile != -1) 
+	if (iAmmoPile != -1)
 		SDKCall(hSDKGiveDefaultAmmo, iAmmoPile, client);
 }
 
