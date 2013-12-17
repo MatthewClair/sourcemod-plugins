@@ -80,4 +80,8 @@ public OnTakeDamagePost(victim, attacker, inflictor, Float:damage, damagetype)
 stock Float:GetSurvivorHealth(client) return GetPermHealth(client) + GetTempHealth(client);
 stock GetPermHealth(client) return GetEntProp(client, Prop_Send, "m_iHealth");
 stock bool:IsPlayerIncap(client) return bool:GetEntProp(client, Prop_Send, "m_isIncapacitated");
-stock Float:GetTempHealth(client) return GetEntPropFloat(client, Prop_Send, "m_healthBuffer") - ((GetGameTime() - GetEntPropFloat(client, Prop_Send, "m_healthBufferTime")) * GetConVarFloat(pain_pills_decay_rate));
+stock Float:GetTempHealth(client)
+{
+	new Float:tmp = GetEntPropFloat(client, Prop_Send, "m_healthBuffer") - ((GetGameTime() - GetEntPropFloat(client, Prop_Send, "m_healthBufferTime")) * GetConVarFloat(pain_pills_decay_rate));
+	return tmp > 0 ? tmp : 0;
+}
