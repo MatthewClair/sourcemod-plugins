@@ -163,7 +163,7 @@ PrintWitchDamageAndRemove(witch)
 		for (new i = 0; i < array_size; i++)
 		{
 			GetArrayArray(damage_array, i, current_client);
-			if (client > 0 && client <= MaxClients && IsClientInGame(current_client[CDE_client]))
+			if (current_client[CDE_client] > 0 && current_client[CDE_client] <= MaxClients && IsClientInGame(current_client[CDE_client]))
 			{
 				PrintToChatAll("\x03%N: \x05%d\x01 [\x05%d%%\x01]", current_client[CDE_client], current_client[CDE_damage], current_client[CDE_damage]*100/witch_health);
 			}
