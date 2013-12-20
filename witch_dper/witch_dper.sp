@@ -102,7 +102,8 @@ public OnHunterHighPounce(hunter, survivor, actualDamage, Float:calculatedDamage
 		SetCommandFlags("z_spawn_old", flags & ~FCVAR_CHEAT);
 
 		new count = 0;
-		for (new i = GetConVarInt(wdp_multiwitch), new tmpDmg = calculatedDamage;
+		new Float:tmpDmg = calculatedDamage;
+		for (new i = GetConVarInt(wdp_multiwitch);
 				i > 0 && tmpDmg > GetConVarInt(wdp_minimum_damage);
 				i--, tmpDmg -= GetConVarInt(wdp_minimum_damage), count++)
 		{
