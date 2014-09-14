@@ -6,9 +6,9 @@
 public Plugin:myinfo =
 {
 	name = "Caster Assister",
-	author = "CanadaRox",
+	author = "CanadaRox, Sir",
 	description = "Allows spectators to control their own specspeed and move vertically",
-	version = "1",
+	version = "2",
 	url = ""
 };
 
@@ -18,7 +18,7 @@ new Float:verticalIncrement[MAXPLAYERS+1] = { 10.0, ... };
 
 public OnPluginStart()
 {
-	RegConsoleCmd("sm_set_specspeed_mutli", SetSpecspeed_Cmd);
+	RegConsoleCmd("sm_set_specspeed_multi", SetSpecspeed_Cmd);
 	RegConsoleCmd("sm_set_specspeed_increment", SetSpecspeedIncrement_Cmd);
 	RegConsoleCmd("sm_increase_specspeed", IncreaseSpecspeed_Cmd);
 	RegConsoleCmd("sm_decrease_specspeed", DecreaseSpecspeed_Cmd);
@@ -35,29 +35,6 @@ public PlayerTeam_Event(Handle:event, const String:name[], bool:dontBroadcast)
 		new client = GetClientOfUserId(GetEventInt(event, "userid"));
 		SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", currentMulti[client]);
 	}
-}
-
-public OnClientAuthorized(client, const String:auth[])
-{
-	decl String:buffer[10];
-	if (GetClientInfo(client, "specspeed_multi", buffer, sizeof(buffer)))
-	{
-		currentMulti[client] = StringToFloat(buffer);
-	}
-	if (GetClientInfo(client, "specspeed_increment", buffer, sizeof(buffer)))
-	{
-		currentIncrement[client] = StringToFloat(buffer);
-	}
-	if (GetClientInfo(client, "specspeed_vert_increment", buffer, sizeof(buffer)))
-	{
-		verticalIncrement[client] = StringToFloat(buffer);
-	}
-}
-
-public OnClientDisconnect(client)
-{
-	currentMulti[client] = 1.0;
-	currentIncrement[client] = 0.1;
 }
 
 public Action:SetSpecspeed_Cmd(client, args)
